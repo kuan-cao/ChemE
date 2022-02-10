@@ -1,246 +1,524 @@
 ### A Pluto.jl notebook ###
-# v0.18.0
+# v0.17.7
 
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ 6b1ad54f-61e4-490d-9032-7a557e8dc82f
-md"""
-## CHEME 5440/7770: Structural Analysis of the Urea Cycle (PS2)
-"""
-
-# ╔═╡ 7057c8e4-9e94-4a28-a885-07f5c96ebe39
-html"""
-<p style="font-size:20px;">Student name, Student name, Student name ... Student name</br>
-Smith School of Chemical and Biomolecular Engineering, Cornell University, Ithaca NY 14850</p>
-"""
-
-# ╔═╡ 87a183bc-3857-4189-8103-18c46ff3245d
-md"""
-#### Build the stoichiometric array
-"""
-
-# ╔═╡ 5338451e-3c4b-4030-bbbb-42eaf4209a89
+# ╔═╡ 207e1a73-7cb3-4030-9db8-fd100d681759
 begin
-	# fill me in ...
 
-	#####################
-	# Set up function for building an array
-	function extract_species_dictionary(reaction_phrase::String;
-		direction::Float64 = -1.0)::Dict{String,Float64}
-	
-		# initialize -
-		species_symbol_dictionary = Dict{String,Float64}()
-		
-		# ok, do we hve a +?
-		component_array = split(reaction_phrase,'+');
-		for component ∈ component_array
-	
-			if (contains(component,'*') == true)
-				
-				tmp_array = split(component,'*')
-				st_coeff = direction*parse(Float64,tmp_array[1])
-				species_symbol = String(tmp_array[2])
-	
-				# don't cache the ∅ -
-				if (species_symbols != "∅")
-					species_symbol_dictionary[species_symbol] = st_coeff
-				end
-			else 
-				
-				# strip any spaces -
-				species_symbol = component |> lstrip |> rstrip
-	
-				# don't cache the ∅ -
-				if (species_symbol != "∅")
-					species_symbol_dictionary[species_symbol] = direction*1.0
-				end
-			end
-		end
-	
-		# return -
-		return species_symbol_dictionary
-	end
-
-function build_stoichiometric_matrix(reactions::Array{String,1})::Tuple{Array{Float64,2},
-	Array{String,1}, Array{String,1}}
-
-	# initialize -
-	species_array = Array{String,1}()
-	reaction_array = Array{String,1}()
-	reaction_dictionary_array = Array{Dict{String,Float64},1}()
-	
-	# first: let's discover the species list -
-	for reaction_string ∈ reactions
-
-		# initialize tmp storage -
-		tmp_dictionary = Dict{String,Float64}()
-		
-		# split the reaction into its components -
-		component_array = split(reaction_string,',');
-
-		# reaction name -
-		reaction_name = String.(component_array[1]);
-		push!(reaction_array, reaction_name);
-		
-		# reactant phrase => 2, and product phrase => 3
-		reactant_phrase = String.(component_array[2]);
-		product_phrase = String.(component_array[3]);
-
-		# generate species lists for the reactants and products, then merge -
-		merge!(tmp_dictionary, extract_species_dictionary(reactant_phrase; direction = -1.0))
-		merge!(tmp_dictionary, extract_species_dictionary(product_phrase; direction = 1.0))
-
-		# grab the tmp_dictionary for later -
-		push!(reaction_dictionary_array, tmp_dictionary)
-
-		# the species that we need to look at are the keys of the tmp_dictionary -
-		tmp_species_list = keys(tmp_dictionary)
-		
-		# we need a unique species list, so check to see if we have already discovered this species -
-		for tmp_species ∈ tmp_species_list
-
-			if (in(tmp_species, species_array) == false)
-
-				# ok, we have *not* seen this species before, let's grab it -
-				push!(species_array, tmp_species)
-			end
-		end
-	end
-
-	# sort alphabetically -
-	sort!(species_array)
-	
-	# we have a *unique* species array, let's initialize some storage for the stoichiometric array
-	S = zeros(length(species_array), length(reactions));
-
-	# last: fill in the values for stoichiometric coefficents -
-	for (row_index, species_symbol) ∈ enumerate(species_array)
-		for (col_index, reaction_dictionary) ∈ enumerate(reaction_dictionary_array)
-
-			# ok: is this species symbol in my reaction dictionary?
-			if (haskey(reaction_dictionary, species_symbol) == true)
-				S[row_index,col_index] = reaction_dictionary[species_symbol]
-			end
-		end
-	end
-
-	# return -
-	return (S, species_array, reaction_array)
-end
-	#####################
-	
-	# Setup a collection of reaction strings -
-	reaction_array = Array{String,1}()
-
-	# encode the reactions -
-	push!(reaction_array,"v₁,CarbamoylPhosphate + Ornithine, Phosphate + Citrulline,true")
-	push!(reaction_array,"v₂,ATP + Citrulline + Aspartate, AMP + Diphosphate + Succinate,true")
-	push!(reaction_array,"v₃,Succinate, Fumarate + Arginine,true")
-	push!(reaction_array,"v₄,Arginine + water, Ornithine + Urea,true")
-	push!(reaction_array,"v₅,2 Arginine + 4 Oxygen + 3 NADPH + 3 Hplus, 2 NitricOxide + 2 Citrulline + 3 NADPplus + 4 water,true")
-
-	# push!(reaction_array,"v₆,ATP + Hydrogencarbonate, ADP + Carboxyphosphate,true")
-	# push!(reaction_array,"v₇,NH3 + Carboxyphosphate, Carbamate + Phosphate,true")
-	# push!(reaction_array,"v₈,ATP + Carbamate, ADP + Carbamoyl Phosphate,true")
-
-	push!(reaction_array,"vₐ,∅,CarbamoylPhosphate,true")
-	push!(reaction_array,"vₐ,∅,Aspartate,true")
-	push!(reaction_array,"vₑ,Fumarate,∅,true")
-	push!(reaction_array,"vₕ,Urea,∅,true")
-	
-	push!(reaction_array,"vⱼ,J,∅,true")
-	push!(reaction_array,"vATP,ATP,∅,true")
-	push!(reaction_array,"vAMP,AMP,∅,true")
-	push!(reaction_array,"vNADPplus,NADPplus,∅,true")
-	push!(reaction_array,"vwater,water,∅,true")
-
-	push!(reaction_array,"vCitrulline,Citrulline,∅,true")
-	push!(reaction_array,"vSuccinate,Succinate,∅,true")
-	push!(reaction_array,"vArginine,Arginine,∅,true")
-	push!(reaction_array,"vOrnithine,Ornithine,∅,true")
-	
-	# compute the stoichiometric matrix -
-	(S, species_array, reaction_name_array) = build_stoichiometric_matrix(reaction_array);
-
-	# # show -
-	# nothing
-
-	(ℳ,ℛ) = size(S)
-	species_array
-end
-
-# ╔═╡ 6970dab5-16bd-4898-b88d-723cb1b3d89e
-md"""
-#### Convex analysis: compute the extreme pathways
-"""
-
-# ╔═╡ 97b0763d-dcab-4afa-b660-52e18b3d523f
-begin
-	# fill me in ...
-end
-
-# ╔═╡ b473b17e-3bf5-4b6c-af24-fe57b5a7e7e9
-md"""
-#### Metabolite connectivity array (MCA)
-"""
-
-# ╔═╡ 999ae1fd-5341-4f66-9db2-dec53fa0cd49
-begin
-	# fill me in ...
-end
-
-# ╔═╡ b7e5d1a6-57ed-4d09-a039-a4bd12386367
-md"""
-#### Reaction connectivity array (RCA)
-"""
-
-# ╔═╡ 4520fc6e-7305-487e-924d-af22406e6d45
-begin
-	# fill me in ...
-end
-
-# ╔═╡ 267865de-1b5c-4579-861b-c6c46beb4739
-function ingredients(path::String)
-	
-	# this is from the Julia source code (evalfile in base/loading.jl)
-	# but with the modification that it returns the module instead of the last object
-	name = Symbol("lib")
-	m = Module(name)
-	Core.eval(m,
-        Expr(:toplevel,
-             :(eval(x) = $(Expr(:core, :eval))($name, x)),
-             :(include(x) = $(Expr(:top, :include))($name, x)),
-             :(include(mapexpr::Function, x) = $(Expr(:top, :include))(mapexpr, $name, x)),
-             :(include($path))))
-	m
-end
-
-# ╔═╡ 67f5db98-88d0-11ec-27ac-b57538a166f4
-begin
 	# import some packages -
 	using PlutoUI
 	using PrettyTables
-	using LinearAlgebra
+	using Optim
 	using Plots
+	using LinearAlgebra
 	
 	# setup paths -
 	const _PATH_TO_NOTEBOOK = pwd()
+	const _PATH_TO_DATA = joinpath(_PATH_TO_NOTEBOOK,"data")
+	const _PATH_TO_FIGS = joinpath(_PATH_TO_NOTEBOOK,"figs")
 	const _PATH_TO_SRC = joinpath(_PATH_TO_NOTEBOOK,"src")
-
-	# load the PS2 code lib -
-	lib = ingredients(joinpath(_PATH_TO_SRC, "Include.jl"));
 
 	# return -
 	nothing
 end
 
-# ╔═╡ ab2bcfd5-3ba7-4388-8a3c-2cb95fba989a
+# ╔═╡ a0aca432-86ce-11ec-3668-679d09123b86
+md"""
+### Minimum Energy Metabolic Flux Distributions
+
+In this lecture, we will:
+
+1. Introduce Gibbs energy minimization and partial molar Gibbs energy for multiple coupled reactions
+2. Compute the reversibility of multiple coupled enzyme-catalyzed reactions
+
+Discussion problem:
+* Compute the `low-energy` metabolic flux distribution through a metabolic network
+"""
+
+# ╔═╡ 552ffec5-d763-467f-a29d-eadf1bad6437
+md"""
+### Direct Gibbs Energy Minimization of Multiple Chemical Reactions in Central Carbon Metabolism
+Calculate the equilibrium extent of reaction and the equilibrium concentrations for the first five steps of glycolysis occurring in an  _E. coli_ MG-1655 cell-free extract using Direct Gibbs Energy Minimization (DGEM).
+The pathway in this example is [here](https://www.genome.jp/kegg-bin/show_pathway?eco00010).
+
+__Assumptions__
+* The cell-free extract has a constant V = 30.0μL
+* The cell-free extract acts like an _ideal_ liquid solution
+* The cell-free reaction is at a constant T, P
+* The _default_ metabolic settings used by [eQuilibrator](https://equilibrator.weizmann.ac.il) are valid for this system
+"""
+
+# ╔═╡ 767ac9c4-3452-4f85-8de2-5b49001abc92
+md"""
+##### Theory
+
+The problem asks us to use the Direct Gibbs Energy Minimization (DGEM) approach. For multiple reactions, the Gibbs expression:
+
+$$\hat{G} = \sum_{i=1}^{\mathcal{M}}\bar{G}_{i}n_{i}$$
+
+becomes:
+
+$$\frac{\left(\hat{G}-\sum_{i=1}^{\mathcal{M}}n_{i}^{\circ}G_{i}^{\circ}\right)}{RT} = \sum_{j=1}^{\mathcal{R}}\epsilon_{j}\left(\frac{\Delta{G}_{j}^{\circ}}{RT}\right) + \sum_{i=1}^{\mathcal{M}}n_{i}\ln\hat{a}_{i}$$
+
+where the number of mol for species _i_ is given by:
+
+$$n_{i} = n_{i}^{\circ} + \sum_{r=1}^{\mathcal{R}}\sigma_{ir}\epsilon_{r}\qquad{i=1,2,\dots,\mathcal{M}}$$
+
+The quantity $\Delta{G}^{\circ}_{j}$ denotes the Gibbs energy of reaction for reaction _j_ (units: kJ/mmol), and $\hat{a}_{i}$ denotes the ratio of fugacity for component _i_, which (after the assumption of an ideal solution) becomes: $$\ln\hat{a}_{i} = x_{i}$$ where $x_{i}$ denotes the mol fraction of component _i_.
+
+To estimate the equilibrium extent _vector_ we minimize Gibbs energy expression, subject to constraints. Our decision variables (what we are looking for) are the extents of reaction $\epsilon_{i},i=1,\dots,\mathcal{R}$ subject to bounds on each extent $\epsilon_{i}\in\left[0,\star\right],\forall{i}$ and $n_{i}\geq{0},\forall{i}$.
+
+We implement $\epsilon_{i}\in\left[0,\star\right]$ as a box constraint, and $n_{i}\geq{0}$ using a [Penalty Method](https://en.wikipedia.org/wiki/Penalty_method).
+
+"""
+
+# ╔═╡ 384f1569-b77e-4b7c-b559-01bc70b0ed89
+md"""
+##### Implementation
+"""
+
+# ╔═╡ e391a136-dbc2-4b56-b758-a1449db46693
+T = 37.0 + 273.15; # units: K
+
+# ╔═╡ 02d20bb5-d7d6-4435-9091-be6b65b10d5c
+V = 30*(1/1e6); # units: L
+
+# ╔═╡ 04bc136e-44d6-4ebf-81c4-8ab6f7a404d5
+begin
+	
+	# setup problem parameters -
+	parameters_dict = Dict{String,Any}()
+
+	# conversion factor -
+	ΔG_sf = 1e9; # convert to mol to *mol
+	
+	# what are my system dimensions?
+	ℳ = 8 # number of metabolites
+	ℛ = 5 # number of reactions
+
+	# ΔG_formation data -
+	G_formation_array = zeros(ℳ) 
+	G_formation_array[1] = -409.4 		# 1 gluc kJ/mol
+	G_formation_array[2] = -1304.7 		# 2 gluc-6-p kJ/mol
+	G_formation_array[3] = -2280.7 		# 3 atp kJ/mol
+	G_formation_array[4] = -1405.9 		# 4 adp kJ/mol
+	G_formation_array[5] = -1302.1 		# 5 fruc-6-p kJ/mol
+	G_formation_array[6] = -2193.6 		# 6 fruc-1,6-bis-p kJ/mol
+	G_formation_array[7] = -1097.2 		# 7 dhap kJ/mol
+	G_formation_array[8] = -1091.5 		# 8 ga3p kJ/mol
+	parameters_dict["G_formation_array"] = (1/ΔG_sf)*G_formation_array # units: kJ/*mol
+
+	# what are my initial condtions?
+	n_initial_array = 1.0*ones(ℳ)
+	n_initial_array[1] = 35.9*(V)*(1e9/1e3) 		# 1 gluc nmol
+	n_initial_array[3] = 2000.0 					# 3 atp nmol
+	parameters_dict["n_initial_array"] = n_initial_array
+
+	# setup stoichiometric array -
+	S = [
+
+		# ϵ₁ ϵ₂  ϵ₃  ϵ₄  ϵ₅ 
+		-1.0 0.0 0.0 0.0 0.0 	; # 1 gluc
+		1.0 -1.0 0.0 0.0 0.0 	; # 2 gluc-6-p
+		-1.0 0.0 -1.0 0.0 0.0 	; # 3 atp
+		1.0 0.0 1.0 0.0 0.0 	; # 4 adp
+		0.0 1.0 -1.0 0.0 0.0 	; # 5 fruc-6-p
+		0.0 0.0 1.0 -1.0 0.0 	; # 6 fruc-1,6-bis-p
+		0.0 0.0 0.0 1.0 1.0		; # 7 dhap
+		0.0 0.0 0.0 1.0 -1.0	; # 8 ga3p
+	];
+	parameters_dict["S"] = S
+	
+	# show -
+	nothing
+end
+
+# ╔═╡ 6d422479-9788-42e3-a6fb-acc4fe369e20
+R = 8.314*(1/1000)*(1/ΔG_sf); # units: kJ/nmol-K
+
+# ╔═╡ 38a645d9-688e-4794-9c8f-98e8ec5b6516
+md"""
+### Discussion problem (experimental)
+
+Compute the metabolic flux distribution for upper glycolysis using Direct Gibbs Energy Minimization (DGEM) 
+for the first five reactions of glycolysis. The reactions operate in an open logical control volume with a single input (s=1) and a single output (s=2). Let the rate of glucose input into the logical control volume be $\dot{n}_{1,1}=1077$ nmol/time and the rate of ATP input $\dot{n}_{3,1} = 2000$ nmol/time. All other components
+enter the logical control volume at 1.0 nmol/time. All components can exit the logical control volume. 
+
+__Compute__
+* The open extent of reaction $\dot{\epsilon}_{i}~\forall{i}$ using a DGEM approach for an _unbounded_ exit stream and unbounded extent ($\dot{\epsilon}_{i}\geq{0}~\forall{i}$).
+* The open extent of reaction $\dot{\epsilon}_{i}~\forall{i}$ using a DGEM approach for a _bounded_ exit stream and unbounded extent ($\dot{\epsilon}_{i}\geq{0}~\forall{i}$). In particular, let's simulate the logical exit condition for DHAP $\dot{n_{7,2}}\leq{10}$.
+
+__Assumptions__
+* The cell-free extract has a constant V = 30.0μL
+* The cell-free extract acts like an _ideal_ liquid solution
+* The cell-free reaction is at a constant T, P
+* The cell-free extract is well mixed
+* The _default_ metabolic settings used by [eQuilibrator](https://equilibrator.weizmann.ac.il) are valid for this system
+"""
+
+# ╔═╡ 77c6925b-6588-4702-8d1d-5de05316d722
+md"""
+##### Theory
+The problem asks us to use the Direct Gibbs Energy Minimization (DGEM) approach to estimate metabolic flux in an `open system`. For multiple reactions in an `open problem`, the Gibbs expression is now given by:
+
+$$\dot{G} = \sum_{i=1}^{\mathcal{M}}\bar{G}_{i}\dot{n}_{i,s^{\star}}$$
+
+where $\dot{n}_{i}$ denotes the $\star$mol flow rate into/from the logical control volume (units: $\star$mol/time),
+$\bar{G}_{i}$ denotes the partial molar Gibbs energy for component $i$ (units: energy/$\star$mol), and
+$\dot{G}$ denotes the Gibbs energy in the logical control volume (units: energy/time).
+The `open` mol balance around species $i$ inside the _logical_ control volume (assuming a single input s=1 and output steam s=2): 
+
+$$\dot{n}_{i,2} = \dot{n}_{i,1} + \sum_{j=1}^{\mathcal{R}}\sigma_{ij}\dot{\epsilon}_{j}\qquad{i=1,2,\dots,\mathcal{M}}$$
+
+These balances can be used as constraints to find the optimal open extent of reaction with the lowest 
+total Gibbs energy for a particular stream. In particular, the total Gibbs energy for an open system in which we minimize the energy of the __exit stream__ is given by:
+
+$$\dot{G} = \sum_{i=1}^{\mathcal{M}}\bar{G}_{i}\dot{n}_{i,2}$$
+
+where the partial molar Gibbs energy (assuming an ideal solution) is given by: 
+
+$$\bar{G}_{i} = G_{i}^{\circ} + RT\ln{x}_{i}\qquad{i=1,2,\dots,\mathcal{M}}$$
+
+and:
+
+$$x_{i}=\frac{\dot{n}_{i}}{\sum_{j=1}^{\mathcal{M}}\dot{n}_{j}}\qquad{i=1,2,\dots,\mathcal{M}}$$
+
+To estimate the open extent _vector_ we minimize the open Gibbs energy expression, subject to constraints. Our decision variables (what we are looking for) are the open extents of reaction $\dot{\epsilon}_{i},i=1,\dots,\mathcal{R}$. In this case the constraints are bounds on each extent $\dot{\epsilon}_{i}\in\left[0,\star\right],\forall{i}$ and $n_{i,\star}\geq{0},\forall{i}$.
+
+"""
+
+# ╔═╡ 68be4ebd-54b5-4f86-b467-1e06c681aaa2
+md"""
+##### Implementation
+"""
+
+# ╔═╡ c7c4218a-4c6f-48f4-9cca-76a2db9cd1d9
+begin
+
+	# problem setup -
+	open_parameters_dict = Dict{String,Any}()
+	open_parameters_dict["G_formation_array"] = parameters_dict["G_formation_array"];
+
+	# setup the reaction to pull ga3p -
+	Sₒ = [
+
+		# ϵ₁ ϵ₂  ϵ₃  ϵ₄  ϵ₅ 
+		-1.0 0.0 0.0 0.0 0.0 	; # 1 gluc
+		1.0 -1.0 0.0 0.0 0.0 	; # 2 gluc-6-p
+		-1.0 0.0 -1.0 0.0 0.0 	; # 3 atp
+		1.0 0.0 1.0 0.0 0.0		; # 4 adp
+		0.0 1.0 -1.0 0.0 0.0 	; # 5 fruc-6-p
+		0.0 0.0 1.0 -1.0 0.0 	; # 6 fruc-1,6-bis-p
+		0.0 0.0 0.0 1.0 1.0 	; # 7 dhap
+		0.0 0.0 0.0 1.0 -1.0	; # 8 ga3p
+	];
+	open_parameters_dict["S"] = Sₒ
+	(ℳₒ,ℛₒ) = size(Sₒ)
+	
+	# what are my initial condtions?
+	n_dot_in_array = 0.01*ones(ℳₒ)
+	n_dot_in_array[1] = 1077.0 					# 1 gluc nmol/time
+	n_dot_in_array[3] = 2000.0 					# 3 atp nmol/time
+	open_parameters_dict["n_dot_in_array"] = n_dot_in_array
+
+	# what are the outflow terms -
+	n_dot_out_upper_bound_array = 100000.0*ones(ℳₒ)
+	
+	# uncomment me to impose upper bound for DHAP -
+	#n_dot_out_upper_bound_array[7] = 5.0
+	open_parameters_dict["n_dot_out_upper_bound_array"] = n_dot_out_upper_bound_array
+
+	# show -
+	nothing
+end
+
+# ╔═╡ b4ed3db1-fa2a-4b3a-a44a-7366345979b2
+md"""
+### Summary and Conclusions
+
+In this lecture we:
+
+1. Introduced Gibbs energy minimization and partial molar Gibbs energy
+2. Computed the reversibility of multiple coupled enzyme-catalyzed reactions
+3. Used the Direct Gibbs Energy Minimization (DGEM) approach to estimate metabolic flux in an `open logical system`
+
+"""
+
+# ╔═╡ d4ce7976-85f2-47e0-8845-64c0b6d9249a
+md"""
+### Next time:
+
+We'll discuss enzyme kinetics and the origin of the bounds conditions. In particular, we'll look at:
+
+* The assumptions that underly [Michaelis-Menten kinetics](https://en.wikipedia.org/wiki/Michaelis–Menten_kinetics) (and the derivation)
+* The [MWC](https://en.wikipedia.org/wiki/Monod-Wyman-Changeux_model) and [Sequential](https://en.wikipedia.org/wiki/Sequential_model) models for allosteric enzyme kinetics
+* Developing our approach to modeling enzyme kinetics (it's going to be crazy awesome!)
+"""
+
+# ╔═╡ 72dddb17-3e97-4214-ae44-28e908febbba
+md"""
+### Julia function library
+"""
+
+# ╔═╡ b71d2bc5-0393-4ec8-97a6-bbfddae00b06
+function objective_function_open(ϵ, parameters)
+
+	# get data from the parameters -
+	G_formation_array = parameters["G_formation_array"]
+	S = parameters["S"]
+	n_dot_in = parameters["n_dot_in_array"]
+	UB_ndot_out = parameters["n_dot_out_upper_bound_array"]
+	RT = R*T
+
+	# compute the n_dot_out and mol fraction -
+	tmp = n_dot_in + S*ϵ
+	n_dot_out = max.(0.0, tmp) # hack: if we have a mol count less than 0, correct -
+	n_total = sum(n_dot_out)
+	x_array = (1/n_total)*n_dot_out	
+	activity_terms = log.(x_array)
+	
+	# compute the partial molar Gibbs energy --
+	G_bar = G_formation_array .+ RT*(activity_terms)
+
+	# compute the objective value -
+	𝒪 = sum(n_dot_out.*G_bar)
+
+	# setup non-negative penalty term array -
+	penalty_terms_array_1 = Array{Float64,1}()
+	for species_index ∈ 1:ℳ
+
+		penalty_term = max(0,-1*tmp[species_index])^2
+		push!(penalty_terms_array_1, penalty_term)
+	end
+	𝒫₁ = sum(penalty_terms_array_1);
+	
+	# setup penality term array -
+	penalty_terms_array_2 = Array{Float64,1}()
+	for species_index = 1:ℳ
+
+		# compute the tmp term -
+		tmp_term = (n_dot_out[species_index] - UB_ndot_out[species_index])		
+		penalty_term = max(0,tmp_term)^2
+		push!(penalty_terms_array_2, penalty_term)
+	end
+	𝒫₂ = sum(penalty_terms_array_2);
+
+	# return -
+	return 𝒪 + 10*(𝒫₁ + 𝒫₂)
+end
+
+# ╔═╡ 7b1df4fa-51eb-4558-b808-f4a8e7433af8
+begin
+
+	# setup bounds -
+	Lₒ = zeros(ℛₒ)
+
+	# uncomment me:
+	Uₒ = 1000000.0*ones(ℛₒ)
+
+	# set the initial extent -
+	ϵₒ = 0.1*ones(ℛₒ)
+	
+	# setup the objective function -
+	OF_open(p) = objective_function_open(p, open_parameters_dict)
+
+    # uncomment me: call the optimizer -
+    opt_result_open = optimize(OF_open, Lₒ, Uₒ, ϵₒ, Fminbox(BFGS()))
+end
+
+# ╔═╡ 2625b050-e961-483f-8e67-1748a981d2e8
+with_terminal() do
+	
+	ϵ = Optim.minimizer(opt_result_open)
+	reaction_string_array = [
+		"glc + atp = g6p + adp" 	;
+		"g6p = f6p" 				;
+		"f6p + atp = f16bp + adp" 	;
+		"f16bp = dhap + ga3p" 		;
+		"ga3p = dhap" 				;
+	]
+	
+
+	# make the data table array -
+	data_table_array = Array{Any,2}(undef,ℛₒ,3)
+	for reaction_index = 1:ℛₒ
+		data_table_array[reaction_index,1] = reaction_string_array[reaction_index]
+		data_table_array[reaction_index,2] = ϵ[reaction_index]
+		data_table_array[reaction_index,3] = ϵ[reaction_index]*(1/V)*(1e3/1e9)
+	end
+
+	# setup pretty table -
+	# header row -
+	path_table_header_row = (["Reaction","ϵdot","flux"],["","nmol/time", "mM/time"]);
+
+	# write the table -
+	pretty_table(data_table_array; header=path_table_header_row)
+end
+
+# ╔═╡ ac441583-be2d-4d58-8bce-885d2c1e6529
+with_terminal() do
+	
+	ϵ = Optim.minimizer(opt_result_open)
+	S = open_parameters_dict["S"]
+	n_initial_array = open_parameters_dict["n_dot_in_array"]
+	n = n_initial_array + S*ϵ
+
+	# setp table_data_array -
+	table_data_array = Array{Any,2}(undef,ℳ,4)
+	species_array = ["glucose","g6p","atp","adp","f6p","f16bp","dhap","ga3p"]
+	for species_index = 1:ℳ
+		table_data_array[species_index,1] = species_array[species_index]
+		table_data_array[species_index,2] = n_initial_array[species_index]
+		table_data_array[species_index,3] = n[species_index]
+		table_data_array[species_index,4] = n[species_index] - n_initial_array[species_index]
+	end
+	
+	# setup pretty table -
+	# header row -
+	path_table_header_row = (["Species","n_dot_in","n_dot_out","dnᵢ/dt"],["","nmol/time","nmol/time","nmol/time"]);
+
+	# write the table -
+	pretty_table(table_data_array; header=path_table_header_row)
+end
+
+# ╔═╡ 4e93ffc7-a323-4349-9022-899ee7274e9d
+function objective_function_closed(ϵ,parameters)
+
+	# get data from the parameters -
+	G_formation_array = parameters["G_formation_array"]
+	S = parameters["S"]
+	n_initial_array = parameters["n_initial_array"]
+	RT = R*T
+
+	# compute the ΔG/RT terms -
+	ΔG_terms = (1/RT)*transpose(S)*G_formation_array
+	term_1 = sum(ΔG_terms.*ϵ)
+	
+	# compute mols -
+	tmp = n_initial_array + S*ϵ
+	n_array = max.(0.0,tmp) # hack: if we have a mol count less than 0, correct -
+	n_total = sum(n_array)
+	x_array = (1/n_total)*n_array	
+	activity_terms = log.(x_array)
+	term_2 = sum(n_array.*activity_terms)
+
+	# setup non-negative penalty term array -
+	penalty_terms_array_1 = Array{Float64,1}()
+	for species_index ∈ 1:ℳ
+
+		penalty_term = max(0,-1*tmp[species_index])^2
+		push!(penalty_terms_array_1, penalty_term)
+	end
+	𝒫₁ = sum(penalty_terms_array_1);
+
+	# return -
+	return (term_1 + term_2) + 10*𝒫₁
+end
+
+# ╔═╡ 2777bfbf-122a-4344-a15c-30ac7dd3fcfb
+begin
+
+	# setup bounds -
+	L = zeros(ℛ)
+	U = maximum(n_initial_array)*ones(ℛ)
+
+	# set the initial -
+	xinitial = 0.001*ones(ℛ)
+	xinitial[1] = 0.5*maximum(U)
+	
+	# setup the objective function -
+	OF_closed(p) = objective_function_closed(p, parameters_dict)
+    
+    # call the optimizer -
+    opt_result_closed = optimize(OF_closed, L, U, xinitial, Fminbox(BFGS()))
+end
+
+# ╔═╡ d1178ff2-ef25-4f0f-9f58-e69bb8908f9a
+with_terminal() do
+	
+	ϵ = Optim.minimizer(opt_result_closed)
+	reaction_string_array = [
+		"glc + atp = g6p + adp" 	;
+		"g6p = f6p" 				;
+		"f6p + atp = f16bp + adp" 	;
+		"f16bp = dhap + ga3p" 		;
+		"ga3p = dhap" 				;
+	]
+	
+	# compute the dG_reaction -
+	G_formation_array = parameters_dict["G_formation_array"]
+	ΔG_rxn = transpose(S)*G_formation_array
+
+	# compute the equlibrium constant -
+	n_final = n_initial_array + S*ϵ
+
+	# compute the final mol fraction -
+	ln_x_final = log.((1/sum(n_final)).*n_final)
+
+	# make the data table array -
+	data_table_array = Array{Any,2}(undef,ℛ,7)
+	for reaction_index = 1:ℛ
+		data_table_array[reaction_index,1] = reaction_string_array[reaction_index]
+		data_table_array[reaction_index,2] = ΔG_rxn[reaction_index]*(ΔG_sf)
+		data_table_array[reaction_index,3] = ϵ[reaction_index]
+		data_table_array[reaction_index,4] = ϵ[reaction_index]*(1/n_initial_array[1])
+
+		# compute the Keq -
+		tmp = dot(S[:,reaction_index],ln_x_final)
+		K_eq = exp(tmp)
+
+		data_table_array[reaction_index,5] = K_eq
+		data_table_array[reaction_index,6] = exp(-ΔG_rxn[reaction_index]/(R*T))
+		data_table_array[reaction_index,7] = sign(ΔG_rxn[reaction_index]/(R*T)) == 1 ? true : false
+	end
+
+	# setup pretty table -
+	# header row -
+	path_table_header_row = (["Reaction","ΔG_rxn","ϵ", "ϵ-scaled", "Keq (ϵ)", "Keq (ΔG)","reversible"],["","kJ/mol-K","nmol", "AU","","", "Bool"]);
+
+	# write the table -
+	pretty_table(data_table_array; header=path_table_header_row)
+end
+
+# ╔═╡ 02f2c64c-9e93-4d79-966d-e7de429317d8
+with_terminal() do
+	
+	ϵ = Optim.minimizer(opt_result_closed)
+	S = parameters_dict["S"]
+	n_initial_array = parameters_dict["n_initial_array"]
+	n = n_initial_array + S*ϵ
+
+	# setp table_data_array -
+	table_data_array = Array{Any,2}(undef,ℳ,5)
+	species_array = ["glucose","g6p","atp","adp","f6p","f16bp","dhap","ga3p"]
+	for species_index = 1:ℳ
+		table_data_array[species_index,1] = species_array[species_index]
+		table_data_array[species_index,2] = n_initial_array[species_index]
+		table_data_array[species_index,3] = n[species_index]
+		table_data_array[species_index,4] = (1/V)*n_initial_array[species_index]*(1e3)*(1/ΔG_sf) # converts to mM
+		table_data_array[species_index,5] = (1/V)*n[species_index]*(1e3)*(1/ΔG_sf) # converts to mM
+	end
+	
+	# setup pretty table -
+	# header row -
+	path_table_header_row = (["Species","n_i","n_f", "C_i", "C_f"],["","nmol","nmol", "mM", "mM"]);
+
+	# write the table -
+	pretty_table(table_data_array; header=path_table_header_row)
+end
+
+
+# ╔═╡ d7b59095-9c08-4a5e-b89d-c83063acd86b
+TableOfContents(title="📚 Table of Contents", indent=true, depth=5, aside=true)
+
+# ╔═╡ d64d393d-8e8e-4742-a501-958f3b385864
 html"""
 <style>
 main {
-    max-width: 900px;
-    width: 70%;
+    max-width: 960px;
+    width: 75%;
     margin: auto;
     font-family: "Roboto, monospace";
 }
@@ -251,16 +529,64 @@ a {
 }
 </style>"""
 
+# ╔═╡ 24c51418-c13e-4f8a-939a-7c15ff7d01db
+html"""
+<script>
+	// initialize -
+	var section = 0;
+	var subsection = 0;
+	var subsubsection = 0;
+	var headers = document.querySelectorAll('h3, h5, h6');
+	
+	// main loop -
+	for (var i=0; i < headers.length; i++) {
+	    
+		var header = headers[i];
+	    var text = header.innerText;
+	    var original = header.getAttribute("text-original");
+	    if (original === null) {
+	        
+			// Save original header text
+	        header.setAttribute("text-original", text);
+	    } else {
+	        
+			// Replace with original text before adding section number
+	        text = header.getAttribute("text-original");
+	    }
+	
+	    var numbering = "";
+	    switch (header.tagName) {
+	        case 'H3':
+	            section += 1;
+	            numbering = section + ".";
+	            subsection = 0;
+	            break;
+	        case 'H5':
+	            subsection += 1;
+	            numbering = section + "." + subsection;
+	            break;
+			case 'H6':
+	            subsubsection += 1;
+	            numbering = section + "." + subsection + "." + subsubsection;
+	            break;
+	    }
+		// update the header text 
+		header.innerText = numbering + " " + text;
+	};
+</script>"""
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Optim = "429524aa-4258-5aef-a3af-852621145aeb"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 PrettyTables = "08abe8d2-0d0c-5749-adfa-8a2ac140af0d"
 
 [compat]
-Plots = "~1.25.8"
+Optim = "~1.6.1"
+Plots = "~1.25.7"
 PlutoUI = "~0.7.34"
 PrettyTables = "~1.3.1"
 """
@@ -269,7 +595,7 @@ PrettyTables = "~1.3.1"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.7.2"
+julia_version = "1.7.1"
 manifest_format = "2.0"
 
 [[deps.AbstractPlutoDingetjes]]
@@ -287,6 +613,12 @@ version = "3.3.3"
 [[deps.ArgTools]]
 uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
 
+[[deps.ArrayInterface]]
+deps = ["Compat", "IfElse", "LinearAlgebra", "Requires", "SparseArrays", "Static"]
+git-tree-sha1 = "1bdcc02836402d104a46f7843b6e6730b1948264"
+uuid = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
+version = "4.0.2"
+
 [[deps.Artifacts]]
 uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
 
@@ -298,12 +630,6 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "19a35467a82e236ff51bc17a3a44b69ef35185a2"
 uuid = "6e34b625-4abd-537c-b88f-471c36dfa7a0"
 version = "1.0.8+0"
-
-[[deps.Cairo]]
-deps = ["Cairo_jll", "Colors", "Glib_jll", "Graphics", "Libdl", "Pango_jll"]
-git-tree-sha1 = "d0b3f8b4ad16cb0a2988c6788646a5e6a17b6b1b"
-uuid = "159f3aea-2a34-519c-b102-8c37f9878175"
-version = "1.0.5"
 
 [[deps.Cairo_jll]]
 deps = ["Artifacts", "Bzip2_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Pkg", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
@@ -324,10 +650,10 @@ uuid = "9e997f8a-9a97-42d5-a9f1-ce6bfc15e2c0"
 version = "0.1.2"
 
 [[deps.ColorSchemes]]
-deps = ["ColorTypes", "Colors", "FixedPointNumbers", "Luxor", "Random"]
-git-tree-sha1 = "5b7d2a8b53c68dfdbce545e957a3b5cc4da80b01"
+deps = ["ColorTypes", "Colors", "FixedPointNumbers", "Random"]
+git-tree-sha1 = "6b6f04f93710c71550ec7e16b650c1b9a612d0b6"
 uuid = "35d6a980-a343-548e-a6ea-1d62b119f2f4"
-version = "3.17.0"
+version = "3.16.0"
 
 [[deps.ColorTypes]]
 deps = ["FixedPointNumbers", "Random"]
@@ -340,6 +666,12 @@ deps = ["ColorTypes", "FixedPointNumbers", "Reexport"]
 git-tree-sha1 = "417b0ed7b8b838aa6ca0a87aadf1bb9eb111ce40"
 uuid = "5ae59095-9a9b-59fe-a467-6f913c188581"
 version = "0.12.8"
+
+[[deps.CommonSubexpressions]]
+deps = ["MacroTools", "Test"]
+git-tree-sha1 = "7b8a93dba8af7e3b42fecabf646260105ac373f7"
+uuid = "bbf7d656-a473-5ed7-a52c-81e309532950"
+version = "0.3.0"
 
 [[deps.Compat]]
 deps = ["Base64", "Dates", "DelimitedFiles", "Distributed", "InteractiveUtils", "LibGit2", "Libdl", "LinearAlgebra", "Markdown", "Mmap", "Pkg", "Printf", "REPL", "Random", "SHA", "Serialization", "SharedArrays", "Sockets", "SparseArrays", "Statistics", "Test", "UUIDs", "Unicode"]
@@ -386,6 +718,18 @@ uuid = "ade2ca70-3891-5945-98fb-dc099432e06a"
 deps = ["Mmap"]
 uuid = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 
+[[deps.DiffResults]]
+deps = ["StaticArrays"]
+git-tree-sha1 = "c18e98cba888c6c25d1c3b048e4b3380ca956805"
+uuid = "163ba53b-c6d8-5494-b064-1a9d43ac40c5"
+version = "1.0.3"
+
+[[deps.DiffRules]]
+deps = ["IrrationalConstants", "LogExpFunctions", "NaNMath", "Random", "SpecialFunctions"]
+git-tree-sha1 = "84083a5136b6abf426174a58325ffd159dd6d94f"
+uuid = "b552c78f-8df3-52c6-915a-8e097449b14b"
+version = "1.9.1"
+
 [[deps.Distributed]]
 deps = ["Random", "Serialization", "Sockets"]
 uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
@@ -424,11 +768,17 @@ git-tree-sha1 = "d8a578692e3077ac998b50c0217dfd67f21d1e5f"
 uuid = "b22a6f82-2f65-5046-a5b2-351ab43fb4e5"
 version = "4.4.0+0"
 
-[[deps.FileIO]]
-deps = ["Pkg", "Requires", "UUIDs"]
-git-tree-sha1 = "80ced645013a5dbdc52cf70329399c35ce007fae"
-uuid = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
-version = "1.13.0"
+[[deps.FillArrays]]
+deps = ["LinearAlgebra", "Random", "SparseArrays", "Statistics"]
+git-tree-sha1 = "8756f9935b7ccc9064c6eef0bff0ad643df733a3"
+uuid = "1a297f60-69ca-5386-bcde-b61e274b549b"
+version = "0.12.7"
+
+[[deps.FiniteDiff]]
+deps = ["ArrayInterface", "LinearAlgebra", "Requires", "SparseArrays", "StaticArrays"]
+git-tree-sha1 = "6eae72e9943d8992d14359c32aed5f892bda1569"
+uuid = "6a86dc24-6348-571c-b903-95158fe2bd41"
+version = "2.10.0"
 
 [[deps.FixedPointNumbers]]
 deps = ["Statistics"]
@@ -447,6 +797,12 @@ deps = ["Printf"]
 git-tree-sha1 = "8339d61043228fdd3eb658d86c926cb282ae72a8"
 uuid = "59287772-0a20-5a39-b81b-1366585eb4c0"
 version = "0.4.2"
+
+[[deps.ForwardDiff]]
+deps = ["CommonSubexpressions", "DiffResults", "DiffRules", "LinearAlgebra", "LogExpFunctions", "NaNMath", "Preferences", "Printf", "Random", "SpecialFunctions", "StaticArrays"]
+git-tree-sha1 = "1bd6fc0c344fc0cbee1f42f8d2e7ec8253dda2d2"
+uuid = "f6369f11-7733-5829-9624-2563aa707210"
+version = "0.10.25"
 
 [[deps.FreeType2_jll]]
 deps = ["Artifacts", "Bzip2_jll", "JLLWrappers", "Libdl", "Pkg", "Zlib_jll"]
@@ -496,12 +852,6 @@ git-tree-sha1 = "a32d672ac2c967f3deb8a81d828afc739c838a06"
 uuid = "7746bdde-850d-59dc-9ae8-88ece973131d"
 version = "2.68.3+2"
 
-[[deps.Graphics]]
-deps = ["Colors", "LinearAlgebra", "NaNMath"]
-git-tree-sha1 = "1c5a84319923bea76fa145d49e93aa4394c73fc2"
-uuid = "a2bd30eb-e257-5431-a919-1863eab51364"
-version = "1.1.1"
-
 [[deps.Graphite2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "344bf40dcab1073aca04aa0df4fb092f920e4011"
@@ -541,6 +891,11 @@ deps = ["Logging", "Random"]
 git-tree-sha1 = "f7be53659ab06ddc986428d3a9dcc95f6fa6705a"
 uuid = "b5f81e59-6552-4d32-b1f0-c071b021bf89"
 version = "0.2.2"
+
+[[deps.IfElse]]
+git-tree-sha1 = "debdd00ffef04665ccbb3e150747a77560e8fad1"
+uuid = "615f187c-cbe4-4ef1-ba3b-2fcf58d6d173"
+version = "0.1.1"
 
 [[deps.IniFile]]
 deps = ["Test"]
@@ -587,15 +942,9 @@ version = "0.21.2"
 
 [[deps.JpegTurbo_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
-git-tree-sha1 = "b53380851c6e6664204efb2e62cd24fa5c47e4ba"
+git-tree-sha1 = "d735490ac75c5cb9f1b00d8b5509c11984dc6943"
 uuid = "aacddb02-875f-59d6-b918-886e6ef4fbf8"
-version = "2.1.2+0"
-
-[[deps.Juno]]
-deps = ["Base64", "Logging", "Media", "Profile"]
-git-tree-sha1 = "07cb43290a840908a771552911a6274bc6c072c7"
-uuid = "e5e0dc1b-0480-54bc-9374-aad01c23163d"
-version = "0.8.4"
+version = "2.1.0+0"
 
 [[deps.LAME_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -675,12 +1024,6 @@ git-tree-sha1 = "9c30530bf0effd46e15e0fdcf2b8636e78cbbd73"
 uuid = "4b2f31a3-9ecc-558c-b454-b3730dcb73e9"
 version = "2.35.0+0"
 
-[[deps.Librsvg_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Pango_jll", "Pkg", "gdk_pixbuf_jll"]
-git-tree-sha1 = "25d5e6b4eb3558613ace1c67d6a871420bfca527"
-uuid = "925c91fb-5dd6-59dd-8e8c-345e74382d89"
-version = "2.52.4+0"
-
 [[deps.Libtiff_jll]]
 deps = ["Artifacts", "JLLWrappers", "JpegTurbo_jll", "Libdl", "Pkg", "Zlib_jll", "Zstd_jll"]
 git-tree-sha1 = "340e257aada13f95f98ee352d316c3bed37c8ab9"
@@ -692,6 +1035,12 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "7f3efec06033682db852f8b3bc3c1d2b0a0ab066"
 uuid = "38a345b3-de98-5d2b-a5d3-14cd9215e700"
 version = "2.36.0+0"
+
+[[deps.LineSearches]]
+deps = ["LinearAlgebra", "NLSolversBase", "NaNMath", "Parameters", "Printf"]
+git-tree-sha1 = "f27132e551e959b3667d8c93eae90973225032dd"
+uuid = "d3d80556-e9d4-5f37-9878-2ab0fcc64255"
+version = "7.1.1"
 
 [[deps.LinearAlgebra]]
 deps = ["Libdl", "libblastrampoline_jll"]
@@ -705,12 +1054,6 @@ version = "0.3.6"
 
 [[deps.Logging]]
 uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
-
-[[deps.Luxor]]
-deps = ["Base64", "Cairo", "Colors", "Dates", "FFMPEG", "FileIO", "Juno", "LaTeXStrings", "Random", "Requires", "Rsvg"]
-git-tree-sha1 = "81a4fd2c618ba952feec85e4236f36c7a5660393"
-uuid = "ae8d54c2-7ccd-5906-9d76-62fc9837b5bc"
-version = "3.0.0"
 
 [[deps.MacroTools]]
 deps = ["Markdown", "Random"]
@@ -737,12 +1080,6 @@ git-tree-sha1 = "e498ddeee6f9fdb4551ce855a46f54dbd900245f"
 uuid = "442fdcdd-2543-5da2-b0f3-8c86c306513e"
 version = "0.3.1"
 
-[[deps.Media]]
-deps = ["MacroTools", "Test"]
-git-tree-sha1 = "75a54abd10709c01f1b86b84ec225d26e840ed58"
-uuid = "e89f7d12-3494-54d1-8411-f7d8b9ae1f27"
-version = "0.5.0"
-
 [[deps.Missings]]
 deps = ["DataAPI"]
 git-tree-sha1 = "bf210ce90b6c9eed32d25dbcae1ebc565df2687f"
@@ -754,6 +1091,12 @@ uuid = "a63ad114-7e13-5084-954f-fe012c677804"
 
 [[deps.MozillaCACerts_jll]]
 uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
+
+[[deps.NLSolversBase]]
+deps = ["DiffResults", "Distributed", "FiniteDiff", "ForwardDiff"]
+git-tree-sha1 = "50310f934e55e5ca3912fb941dec199b49ca9b68"
+uuid = "d41bc354-129a-5804-8e4c-c37616107c6c"
+version = "7.8.2"
 
 [[deps.NaNMath]]
 git-tree-sha1 = "b086b7ea07f8e38cf122f5016af580881ac914fe"
@@ -773,11 +1116,27 @@ version = "1.3.5+1"
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
 uuid = "4536629a-c528-5b80-bd46-f80d51c5b363"
 
+[[deps.OpenLibm_jll]]
+deps = ["Artifacts", "Libdl"]
+uuid = "05823500-19ac-5b8b-9628-191a04bc5112"
+
 [[deps.OpenSSL_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "648107615c15d4e09f7eca16307bc821c1f718d8"
 uuid = "458c3c95-2e84-50aa-8efc-19380b2a3a95"
 version = "1.1.13+0"
+
+[[deps.OpenSpecFun_jll]]
+deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "13652491f6856acfd2db29360e1bbcd4565d04f1"
+uuid = "efe28fd5-8261-553b-a9e1-b2916fc3738e"
+version = "0.5.5+0"
+
+[[deps.Optim]]
+deps = ["Compat", "FillArrays", "ForwardDiff", "LineSearches", "LinearAlgebra", "NLSolversBase", "NaNMath", "Parameters", "PositiveFactorizations", "Printf", "SparseArrays", "StatsBase"]
+git-tree-sha1 = "045d10789f5daff18deb454d5923c6996017c2f3"
+uuid = "429524aa-4258-5aef-a3af-852621145aeb"
+version = "1.6.1"
 
 [[deps.Opus_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -796,11 +1155,11 @@ git-tree-sha1 = "b2a7af664e098055a7529ad1a900ded962bca488"
 uuid = "2f80f16e-611a-54ab-bc61-aa92de5b98fc"
 version = "8.44.0+0"
 
-[[deps.Pango_jll]]
-deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "FriBidi_jll", "Glib_jll", "HarfBuzz_jll", "JLLWrappers", "Libdl", "Pkg"]
-git-tree-sha1 = "3a121dfbba67c94a5bec9dde613c3d0cbcf3a12b"
-uuid = "36c8627f-9965-5494-a995-c6b170f724f3"
-version = "1.50.3+0"
+[[deps.Parameters]]
+deps = ["OrderedCollections", "UnPack"]
+git-tree-sha1 = "34c0e9ad262e5f7fc75b10a9952ca7692cfc5fbe"
+uuid = "d96e819e-fc66-5662-9728-84c9c7592b0a"
+version = "0.12.3"
 
 [[deps.Parsers]]
 deps = ["Dates"]
@@ -832,15 +1191,21 @@ version = "1.1.3"
 
 [[deps.Plots]]
 deps = ["Base64", "Contour", "Dates", "Downloads", "FFMPEG", "FixedPointNumbers", "GR", "GeometryBasics", "JSON", "Latexify", "LinearAlgebra", "Measures", "NaNMath", "PlotThemes", "PlotUtils", "Printf", "REPL", "Random", "RecipesBase", "RecipesPipeline", "Reexport", "Requires", "Scratch", "Showoff", "SparseArrays", "Statistics", "StatsBase", "UUIDs", "UnicodeFun", "Unzip"]
-git-tree-sha1 = "eb1432ec2b781f70ce2126c277d120554605669a"
+git-tree-sha1 = "7e4920a7d4323b8ffc3db184580598450bde8a8e"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
-version = "1.25.8"
+version = "1.25.7"
 
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "Markdown", "Random", "Reexport", "UUIDs"]
 git-tree-sha1 = "8979e9802b4ac3d58c503a20f2824ad67f9074dd"
 uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 version = "0.7.34"
+
+[[deps.PositiveFactorizations]]
+deps = ["LinearAlgebra"]
+git-tree-sha1 = "17275485f373e6673f7e7f97051f703ed5b15b20"
+uuid = "85a6dd25-e78a-55b7-8502-1745935b8125"
+version = "0.2.4"
 
 [[deps.Preferences]]
 deps = ["TOML"]
@@ -857,10 +1222,6 @@ version = "1.3.1"
 [[deps.Printf]]
 deps = ["Unicode"]
 uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
-
-[[deps.Profile]]
-deps = ["Printf"]
-uuid = "9abbd945-dff8-562f-b5e8-e1ebf5ef1b79"
 
 [[deps.Qt5Base_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Fontconfig_jll", "Glib_jll", "JLLWrappers", "Libdl", "Libglvnd_jll", "OpenSSL_jll", "Pkg", "Xorg_libXext_jll", "Xorg_libxcb_jll", "Xorg_xcb_util_image_jll", "Xorg_xcb_util_keysyms_jll", "Xorg_xcb_util_renderutil_jll", "Xorg_xcb_util_wm_jll", "Zlib_jll", "xkbcommon_jll"]
@@ -904,12 +1265,6 @@ git-tree-sha1 = "838a3a4188e2ded87a4f9f184b4b0d78a1e91cb7"
 uuid = "ae029012-a4dd-5104-9daa-d747884805df"
 version = "1.3.0"
 
-[[deps.Rsvg]]
-deps = ["Cairo", "Glib_jll", "Librsvg_jll"]
-git-tree-sha1 = "3d3dc66eb46568fb3a5259034bfc752a0eb0c686"
-uuid = "c4c386cf-5103-5370-be45-f3a111cca3b8"
-version = "1.0.0"
-
 [[deps.SHA]]
 uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
 
@@ -944,6 +1299,18 @@ version = "1.0.1"
 [[deps.SparseArrays]]
 deps = ["LinearAlgebra", "Random"]
 uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+
+[[deps.SpecialFunctions]]
+deps = ["ChainRulesCore", "IrrationalConstants", "LogExpFunctions", "OpenLibm_jll", "OpenSpecFun_jll"]
+git-tree-sha1 = "a4116accb1c84f0a8e1b9932d873654942b2364b"
+uuid = "276daf66-3868-5448-9aa4-cd146d93841b"
+version = "2.1.1"
+
+[[deps.Static]]
+deps = ["IfElse"]
+git-tree-sha1 = "d4da8b728580709d736704764e55d6ef38cb7c87"
+uuid = "aedffcd0-7271-4cad-89d0-dc628f76c6d3"
+version = "0.5.3"
 
 [[deps.StaticArrays]]
 deps = ["LinearAlgebra", "Random", "Statistics"]
@@ -1004,6 +1371,11 @@ version = "1.3.0"
 [[deps.UUIDs]]
 deps = ["Random", "SHA"]
 uuid = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
+
+[[deps.UnPack]]
+git-tree-sha1 = "387c1f73762231e86e0c9c5443ce3b4a0a9a0c2b"
+uuid = "3a884ed6-31ef-47d7-9d2a-63182c4928ed"
+version = "1.0.2"
 
 [[deps.Unicode]]
 uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
@@ -1175,15 +1547,9 @@ uuid = "83775a58-1f1d-513f-b197-d71354ab007a"
 
 [[deps.Zstd_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
-git-tree-sha1 = "e45044cd873ded54b6a5bac0eb5c971392cf1927"
+git-tree-sha1 = "cc4bf3fdde8b7e3e9fa0351bdeedba1cf3b7f6e6"
 uuid = "3161d3a3-bdf6-5164-811a-617609db77b4"
-version = "1.5.2+0"
-
-[[deps.gdk_pixbuf_jll]]
-deps = ["Artifacts", "Glib_jll", "JLLWrappers", "JpegTurbo_jll", "Libdl", "Libtiff_jll", "Pkg", "Xorg_libX11_jll", "libpng_jll"]
-git-tree-sha1 = "c23323cd30d60941f8c68419a70905d9bdd92808"
-uuid = "da03df04-f53b-5353-a52f-6a8b0620ced0"
-version = "2.42.6+1"
+version = "1.5.0+0"
 
 [[deps.libass_jll]]
 deps = ["Artifacts", "Bzip2_jll", "FreeType2_jll", "FriBidi_jll", "HarfBuzz_jll", "JLLWrappers", "Libdl", "Pkg", "Zlib_jll"]
@@ -1241,18 +1607,32 @@ version = "0.9.1+5"
 """
 
 # ╔═╡ Cell order:
-# ╟─6b1ad54f-61e4-490d-9032-7a557e8dc82f
-# ╟─7057c8e4-9e94-4a28-a885-07f5c96ebe39
-# ╟─87a183bc-3857-4189-8103-18c46ff3245d
-# ╠═5338451e-3c4b-4030-bbbb-42eaf4209a89
-# ╟─6970dab5-16bd-4898-b88d-723cb1b3d89e
-# ╠═97b0763d-dcab-4afa-b660-52e18b3d523f
-# ╟─b473b17e-3bf5-4b6c-af24-fe57b5a7e7e9
-# ╠═999ae1fd-5341-4f66-9db2-dec53fa0cd49
-# ╟─b7e5d1a6-57ed-4d09-a039-a4bd12386367
-# ╠═4520fc6e-7305-487e-924d-af22406e6d45
-# ╠═67f5db98-88d0-11ec-27ac-b57538a166f4
-# ╠═267865de-1b5c-4579-861b-c6c46beb4739
-# ╟─ab2bcfd5-3ba7-4388-8a3c-2cb95fba989a
+# ╟─a0aca432-86ce-11ec-3668-679d09123b86
+# ╟─552ffec5-d763-467f-a29d-eadf1bad6437
+# ╟─767ac9c4-3452-4f85-8de2-5b49001abc92
+# ╟─384f1569-b77e-4b7c-b559-01bc70b0ed89
+# ╠═e391a136-dbc2-4b56-b758-a1449db46693
+# ╠═02d20bb5-d7d6-4435-9091-be6b65b10d5c
+# ╠═6d422479-9788-42e3-a6fb-acc4fe369e20
+# ╠═04bc136e-44d6-4ebf-81c4-8ab6f7a404d5
+# ╠═2777bfbf-122a-4344-a15c-30ac7dd3fcfb
+# ╠═d1178ff2-ef25-4f0f-9f58-e69bb8908f9a
+# ╠═02f2c64c-9e93-4d79-966d-e7de429317d8
+# ╟─38a645d9-688e-4794-9c8f-98e8ec5b6516
+# ╟─77c6925b-6588-4702-8d1d-5de05316d722
+# ╟─68be4ebd-54b5-4f86-b467-1e06c681aaa2
+# ╠═c7c4218a-4c6f-48f4-9cca-76a2db9cd1d9
+# ╠═7b1df4fa-51eb-4558-b808-f4a8e7433af8
+# ╠═2625b050-e961-483f-8e67-1748a981d2e8
+# ╠═ac441583-be2d-4d58-8bce-885d2c1e6529
+# ╟─b4ed3db1-fa2a-4b3a-a44a-7366345979b2
+# ╟─d4ce7976-85f2-47e0-8845-64c0b6d9249a
+# ╟─72dddb17-3e97-4214-ae44-28e908febbba
+# ╠═b71d2bc5-0393-4ec8-97a6-bbfddae00b06
+# ╠═4e93ffc7-a323-4349-9022-899ee7274e9d
+# ╠═207e1a73-7cb3-4030-9db8-fd100d681759
+# ╠═d7b59095-9c08-4a5e-b89d-c83063acd86b
+# ╠═d64d393d-8e8e-4742-a501-958f3b385864
+# ╠═24c51418-c13e-4f8a-939a-7c15ff7d01db
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
