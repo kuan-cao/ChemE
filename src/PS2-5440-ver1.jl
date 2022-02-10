@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.18.0
+# v0.17.7
 
 using Markdown
 using InteractiveUtils
@@ -11,7 +11,7 @@ md"""
 
 # ╔═╡ 7057c8e4-9e94-4a28-a885-07f5c96ebe39
 html"""
-<p style="font-size:20px;">Student name, Student name, Student name ... Student name</br>
+<p style="font-size:20px;">Kuan Cao, Emily Chou, Sarah Huang</br>
 Smith School of Chemical and Biomolecular Engineering, Cornell University, Ithaca NY 14850</p>
 """
 
@@ -20,185 +20,23 @@ md"""
 #### Build the stoichiometric array
 """
 
-# ╔═╡ 5338451e-3c4b-4030-bbbb-42eaf4209a89
-begin
-	# fill me in ...
+# ╔═╡ 5b5bb7a9-ddb3-4297-8447-5e45b7deec5c
 
-	#####################
-	# Set up function for building an array
-	function extract_species_dictionary(reaction_phrase::String;
-		direction::Float64 = -1.0)::Dict{String,Float64}
-	
-		# initialize -
-		species_symbol_dictionary = Dict{String,Float64}()
-		
-		# ok, do we hve a +?
-		component_array = split(reaction_phrase,'+');
-		for component ∈ component_array
-	
-			if (contains(component,'*') == true)
-				
-				tmp_array = split(component,'*')
-				st_coeff = direction*parse(Float64,tmp_array[1])
-				species_symbol = String(tmp_array[2])
-	
-				# don't cache the ∅ -
-				if (species_symbols != "∅")
-					species_symbol_dictionary[species_symbol] = st_coeff
-				end
-			else 
-				
-				# strip any spaces -
-				species_symbol = component |> lstrip |> rstrip
-	
-				# don't cache the ∅ -
-				if (species_symbol != "∅")
-					species_symbol_dictionary[species_symbol] = direction*1.0
-				end
-			end
-		end
-	
-		# return -
-		return species_symbol_dictionary
-	end
-
-function build_stoichiometric_matrix(reactions::Array{String,1})::Tuple{Array{Float64,2},
-	Array{String,1}, Array{String,1}}
-
-	# initialize -
-	species_array = Array{String,1}()
-	reaction_array = Array{String,1}()
-	reaction_dictionary_array = Array{Dict{String,Float64},1}()
-	
-	# first: let's discover the species list -
-	for reaction_string ∈ reactions
-
-		# initialize tmp storage -
-		tmp_dictionary = Dict{String,Float64}()
-		
-		# split the reaction into its components -
-		component_array = split(reaction_string,',');
-
-		# reaction name -
-		reaction_name = String.(component_array[1]);
-		push!(reaction_array, reaction_name);
-		
-		# reactant phrase => 2, and product phrase => 3
-		reactant_phrase = String.(component_array[2]);
-		product_phrase = String.(component_array[3]);
-
-		# generate species lists for the reactants and products, then merge -
-		merge!(tmp_dictionary, extract_species_dictionary(reactant_phrase; direction = -1.0))
-		merge!(tmp_dictionary, extract_species_dictionary(product_phrase; direction = 1.0))
-
-		# grab the tmp_dictionary for later -
-		push!(reaction_dictionary_array, tmp_dictionary)
-
-		# the species that we need to look at are the keys of the tmp_dictionary -
-		tmp_species_list = keys(tmp_dictionary)
-		
-		# we need a unique species list, so check to see if we have already discovered this species -
-		for tmp_species ∈ tmp_species_list
-
-			if (in(tmp_species, species_array) == false)
-
-				# ok, we have *not* seen this species before, let's grab it -
-				push!(species_array, tmp_species)
-			end
-		end
-	end
-
-	# sort alphabetically -
-	sort!(species_array)
-	
-	# we have a *unique* species array, let's initialize some storage for the stoichiometric array
-	S = zeros(length(species_array), length(reactions));
-
-	# last: fill in the values for stoichiometric coefficents -
-	for (row_index, species_symbol) ∈ enumerate(species_array)
-		for (col_index, reaction_dictionary) ∈ enumerate(reaction_dictionary_array)
-
-			# ok: is this species symbol in my reaction dictionary?
-			if (haskey(reaction_dictionary, species_symbol) == true)
-				S[row_index,col_index] = reaction_dictionary[species_symbol]
-			end
-		end
-	end
-
-	# return -
-	return (S, species_array, reaction_array)
-end
-	#####################
-	
-	# Setup a collection of reaction strings -
-	reaction_array = Array{String,1}()
-
-	# encode the reactions -
-	push!(reaction_array,"v₁,CarbamoylPhosphate + Ornithine, Phosphate + Citrulline,true")
-	push!(reaction_array,"v₂,ATP + Citrulline + Aspartate, AMP + Diphosphate + Succinate,true")
-	push!(reaction_array,"v₃,Succinate, Fumarate + Arginine,true")
-	push!(reaction_array,"v₄,Arginine + water, Ornithine + Urea,true")
-	push!(reaction_array,"v₅,2 Arginine + 4 Oxygen + 3 NADPH + 3 Hplus, 2 NitricOxide + 2 Citrulline + 3 NADPplus + 4 water,true")
-
-	# push!(reaction_array,"v₆,ATP + Hydrogencarbonate, ADP + Carboxyphosphate,true")
-	# push!(reaction_array,"v₇,NH3 + Carboxyphosphate, Carbamate + Phosphate,true")
-	# push!(reaction_array,"v₈,ATP + Carbamate, ADP + Carbamoyl Phosphate,true")
-
-	push!(reaction_array,"vₐ,∅,CarbamoylPhosphate,true")
-	push!(reaction_array,"vₐ,∅,Aspartate,true")
-	push!(reaction_array,"vₑ,Fumarate,∅,true")
-	push!(reaction_array,"vₕ,Urea,∅,true")
-	
-	push!(reaction_array,"vⱼ,J,∅,true")
-	push!(reaction_array,"vATP,ATP,∅,true")
-	push!(reaction_array,"vAMP,AMP,∅,true")
-	push!(reaction_array,"vNADPplus,NADPplus,∅,true")
-	push!(reaction_array,"vwater,water,∅,true")
-
-	push!(reaction_array,"vCitrulline,Citrulline,∅,true")
-	push!(reaction_array,"vSuccinate,Succinate,∅,true")
-	push!(reaction_array,"vArginine,Arginine,∅,true")
-	push!(reaction_array,"vOrnithine,Ornithine,∅,true")
-	
-	# compute the stoichiometric matrix -
-	(S, species_array, reaction_name_array) = build_stoichiometric_matrix(reaction_array);
-
-	# # show -
-	# nothing
-
-	(ℳ,ℛ) = size(S)
-	species_array
-end
 
 # ╔═╡ 6970dab5-16bd-4898-b88d-723cb1b3d89e
 md"""
 #### Convex analysis: compute the extreme pathways
 """
 
-# ╔═╡ 97b0763d-dcab-4afa-b660-52e18b3d523f
-begin
-	# fill me in ...
-end
-
 # ╔═╡ b473b17e-3bf5-4b6c-af24-fe57b5a7e7e9
 md"""
 #### Metabolite connectivity array (MCA)
 """
 
-# ╔═╡ 999ae1fd-5341-4f66-9db2-dec53fa0cd49
-begin
-	# fill me in ...
-end
-
 # ╔═╡ b7e5d1a6-57ed-4d09-a039-a4bd12386367
 md"""
 #### Reaction connectivity array (RCA)
 """
-
-# ╔═╡ 4520fc6e-7305-487e-924d-af22406e6d45
-begin
-	# fill me in ...
-end
 
 # ╔═╡ 267865de-1b5c-4579-861b-c6c46beb4739
 function ingredients(path::String)
@@ -235,6 +73,91 @@ begin
 	nothing
 end
 
+# ╔═╡ 5338451e-3c4b-4030-bbbb-42eaf4209a89
+begin
+	reaction_array = Array{String,1}()
+	push!(reaction_array,"v₁,3*ATP + 3*Citrulline + 3*Aspartate, 3*AMP + 3*Diphosphate + 3*Succinate,false")
+	push!(reaction_array,"v₂,3*Succinate, 3*Fumarate + 3*Arginine,false")
+	push!(reaction_array,"v₃,Arginine + water, Ornithine + Urea,false")
+	push!(reaction_array,"v₄,CarbamoylPhosphate + Ornithine, Orthophosphate + Citrulline,false")
+	push!(reaction_array,"v₅,2*Arginine+4*Oxygen+3*NADPH + 3*Hplus, 2*NitricOxide + 2*Citrulline + 3*NADPplus + 4*water,true")
+
+	push!(reaction_array,"b₁,∅,CarbamoylPhosphate,false")
+	push!(reaction_array,"b₂,∅,Aspartate,false")
+	push!(reaction_array,"b₃,Fumarate,∅,false")
+	push!(reaction_array,"v₄,Urea,∅,false")
+	
+	# push!(reaction_array,"vⱼ,J,∅,true")
+	
+	push!(reaction_array,"bATP,ATP,∅,true")
+	push!(reaction_array,"bAMP,AMP,∅,true")
+	push!(reaction_array,"bDiphosphate,Diphosphate,∅,true")
+	push!(reaction_array,"bNADPH,NADPH,∅,true")
+	push!(reaction_array,"bNADPplus,NADPplus,∅,true")
+	push!(reaction_array,"bwater,water,∅,true")
+	push!(reaction_array,"boxygen,oxygen,∅,true")
+	push!(reaction_array,"bNitricOxide,NitricOxide,∅,true")
+	push!(reaction_array,"bOrthophosphate,Orthophosphate,∅,true")
+	
+	# push!(reaction_array,"bCitrulline,Citrulline,∅,true")
+	# push!(reaction_array,"bSuccinate,Succinate,∅,true")
+	push!(reaction_array,"bArginine,Arginine,∅,true")
+	push!(reaction_array,"bOrnithine,Ornithine,∅,true")
+
+	
+	# compute the stoichiometric matrix -
+	(S, species_array, reaction_name_array) = lib.build_stoichiometric_matrix(reaction_array);
+
+	# # show -
+	# nothing
+
+	(ℳ,ℛ) = size(S)
+	species_array
+	reaction_name_array
+	S
+end
+
+# ╔═╡ 139f9873-1d00-486a-898b-c011a320f739
+species_array
+
+# ╔═╡ 8c72cba0-fc6b-484f-9858-e11109a4d87d
+reaction_name_array
+
+# ╔═╡ 015f2c75-c79e-4f92-8be8-638377a75504
+S
+
+# ╔═╡ 97b0763d-dcab-4afa-b660-52e18b3d523f
+begin
+	# compute the extreme pathways Tableu -
+	PM = lib.expa(S)
+	
+	# P constaints the extreme pathways (rows) and 𝒩 is the "balanced" array (should be all zeros) -
+	P = PM[:,1:ℛ]
+	𝒩 = PM[:,(ℛ+1):end]
+
+	# show -
+	# nothing
+end
+
+# ╔═╡ 7d5f56c3-0c0d-4b84-8ac7-7dd8472a5468
+P
+
+# ╔═╡ 47eb03ed-f593-401f-b634-98a01bc3099f
+𝒩
+
+# ╔═╡ 999ae1fd-5341-4f66-9db2-dec53fa0cd49
+begin
+	B = S |> binary_stoichiometric_matrix
+	MCA = B*transpose(B)
+end
+
+# ╔═╡ 4520fc6e-7305-487e-924d-af22406e6d45
+begin
+	RCA = transpose(B)*B
+	diag(RCA)
+	# reaction_name_array[11]
+end
+
 # ╔═╡ ab2bcfd5-3ba7-4388-8a3c-2cb95fba989a
 html"""
 <style>
@@ -269,7 +192,7 @@ PrettyTables = "~1.3.1"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.7.2"
+julia_version = "1.7.1"
 manifest_format = "2.0"
 
 [[deps.AbstractPlutoDingetjes]]
@@ -1245,8 +1168,14 @@ version = "0.9.1+5"
 # ╟─7057c8e4-9e94-4a28-a885-07f5c96ebe39
 # ╟─87a183bc-3857-4189-8103-18c46ff3245d
 # ╠═5338451e-3c4b-4030-bbbb-42eaf4209a89
+# ╠═139f9873-1d00-486a-898b-c011a320f739
+# ╠═8c72cba0-fc6b-484f-9858-e11109a4d87d
+# ╠═015f2c75-c79e-4f92-8be8-638377a75504
+# ╠═5b5bb7a9-ddb3-4297-8447-5e45b7deec5c
 # ╟─6970dab5-16bd-4898-b88d-723cb1b3d89e
 # ╠═97b0763d-dcab-4afa-b660-52e18b3d523f
+# ╠═7d5f56c3-0c0d-4b84-8ac7-7dd8472a5468
+# ╠═47eb03ed-f593-401f-b634-98a01bc3099f
 # ╟─b473b17e-3bf5-4b6c-af24-fe57b5a7e7e9
 # ╠═999ae1fd-5341-4f66-9db2-dec53fa0cd49
 # ╟─b7e5d1a6-57ed-4d09-a039-a4bd12386367
