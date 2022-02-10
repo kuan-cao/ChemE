@@ -89,21 +89,36 @@ begin
 	
 	# push!(reaction_array,"vⱼ,J,∅,true")
 	
-	push!(reaction_array,"bATP,ATP,∅,true")
-	push!(reaction_array,"bAMP,AMP,∅,true")
-	push!(reaction_array,"bDiphosphate,Diphosphate,∅,true")
-	push!(reaction_array,"bNADPH,NADPH,∅,true")
-	push!(reaction_array,"bNADPplus,NADPplus,∅,true")
+	# push!(reaction_array,"bATP,ATP,∅,true")
+	# push!(reaction_array,"bAMP,AMP,∅,true")
+	# push!(reaction_array,"bDiphosphate,Diphosphate,∅,true")
+	# push!(reaction_array,"bNADPH,NADPH,∅,true")
+	# push!(reaction_array,"bNADPplus,NADPplus,∅,true")
+	# push!(reaction_array,"bwater,water,∅,true")
+	# push!(reaction_array,"boxygen,oxygen,∅,true")
+	# push!(reaction_array,"bNitricOxide,NitricOxide,∅,true")
+	# push!(reaction_array,"bOrthophosphate,Orthophosphate,∅,true")
+
+	# push!(reaction_array,"bCitrulline,Citrulline,∅,true")
+	# push!(reaction_array,"bSuccinate,Succinate,∅,true")
+	# push!(reaction_array,"bArginine,Arginine,∅,true")
+	# push!(reaction_array,"bOrnithine,Ornithine,∅,true")
+
+	push!(reaction_array,"bATP,∅,ATP,false")
+	push!(reaction_array,"bAMP,AMP,∅,false")
+	push!(reaction_array,"bDiphosphate,Diphosphate,∅,false")
+	push!(reaction_array,"bNADPH,∅,NADPH,false")
+	push!(reaction_array,"bNADPplus,NADPplus,∅,false")
 	push!(reaction_array,"bwater,water,∅,true")
-	push!(reaction_array,"boxygen,oxygen,∅,true")
-	push!(reaction_array,"bNitricOxide,NitricOxide,∅,true")
-	push!(reaction_array,"bOrthophosphate,Orthophosphate,∅,true")
+	push!(reaction_array,"boxygen,∅,oxygen,false")
+	push!(reaction_array,"bNitricOxide,NitricOxide,∅,false")
+	push!(reaction_array,"bHplus,∅,Hplus,false")
+	push!(reaction_array,"bOrthophosphate,Orthophosphate,∅,false")
 	
 	# push!(reaction_array,"bCitrulline,Citrulline,∅,true")
 	# push!(reaction_array,"bSuccinate,Succinate,∅,true")
 	push!(reaction_array,"bArginine,Arginine,∅,true")
 	push!(reaction_array,"bOrnithine,Ornithine,∅,true")
-
 	
 	# compute the stoichiometric matrix -
 	(S, species_array, reaction_name_array) = lib.build_stoichiometric_matrix(reaction_array);
