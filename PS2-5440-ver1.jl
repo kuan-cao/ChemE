@@ -20,16 +20,20 @@ md"""
 #### Build the stoichiometric array
 """
 
-# ╔═╡ 0981f474-777e-4070-b47f-e790b6df6a44
-
-
 # ╔═╡ 6970dab5-16bd-4898-b88d-723cb1b3d89e
 md"""
 #### Convex analysis: compute the extreme pathways
 """
 
 # ╔═╡ 32c8c55e-dee9-4914-bdb1-3b94b6acf2fc
+html"""
+<p style="font-size:18px;">How many extreme pathways (rows of P) did you get, and how many produced Urea?</br>
 
+</br>
+
+Compute the reaction frequency (fraction of extreme pathways using a particular reaction) for each reaction (cols of P).</br>
+</p>
+"""
 
 # ╔═╡ b473b17e-3bf5-4b6c-af24-fe57b5a7e7e9
 md"""
@@ -81,11 +85,11 @@ begin
 	reaction_array = 0
 	reaction_array = Array{String,1}()
 	
-	push!(reaction_array,"v₁,ATP + Citrulline + Aspartate, AMP + Diphosphate + Arginosuccinate,false")
-	push!(reaction_array,"v₂,Arginosuccinate, Fumarate + Arginine,false")
-	push!(reaction_array,"v₃,Arginine + water, Ornithine + Urea,false")
-	push!(reaction_array,"v₄,CarbamoylPhosphate + Ornithine, Orthophosphate + Citrulline,false")
-	push!(reaction_array,"v₅,2*Arginine+4*Oxygen+3*NADPH + 3*Hplus, 2*NitricOxide + 2*Citrulline + 3*NADPplus + 4*water,true")
+	push!(reaction_array,"v₁,ATP+Citrulline+Aspartate,AMP+Diphosphate+Arginosuccinate,false")
+	push!(reaction_array,"v₂,Arginosuccinate,Fumarate+Arginine,false")
+	push!(reaction_array,"v₃,Arginine+water, Ornithine+Urea,false")
+	push!(reaction_array,"v₄,CarbamoylPhosphate+Ornithine, Orthophosphate+Citrulline,false")
+	push!(reaction_array,"v₅,2*Arginine+4*Oxygen+3*NADPH+3*Hplus, 2*NitricOxide+2*Citrulline+3*NADPplus+4*water,true")
 
 	push!(reaction_array,"b₁,∅,CarbamoylPhosphate,false")
 	push!(reaction_array,"b₂,∅,Aspartate,false")
@@ -99,7 +103,7 @@ begin
 	push!(reaction_array,"bNADPH,∅,NADPH,true")
 	push!(reaction_array,"bNADPplus,NADPplus,∅,true")
 	push!(reaction_array,"bwater,water,∅,true")
-	push!(reaction_array,"boxygen,∅,oxygen,true")
+	push!(reaction_array,"bOxygen,∅,Oxygen,true")
 	push!(reaction_array,"bNitricOxide,NitricOxide,∅,true")
 	push!(reaction_array,"bHplus,∅,Hplus,true")
 	
@@ -166,14 +170,7 @@ end
 begin
 	P
 	begin
-		#using DataFrames
-		#df = hcat([DataFrame(eachrow(S),eachcol(S)), :auto])
-		#for i in eachrow(S)
-		#using BrowseTables
-		#HTMLTable(S)
 		countinggg = 0
-		# A = [[1,2,3] [1,1,1] [1,1,1]]
-		# A
 		for row in eachrow(P)
 			if row[21] != 0
 				countinggg = countinggg+1
@@ -188,6 +185,15 @@ P
 
 # ╔═╡ 47eb03ed-f593-401f-b634-98a01bc3099f
 𝒩
+
+# ╔═╡ 0ae0a6d7-a486-4914-bc9f-634824fcadc6
+begin
+	numb = 0
+	for i in eachindex(𝒩)
+		numb = numb + 𝒩[i]
+	end
+	numb
+end
 
 # ╔═╡ 999ae1fd-5341-4f66-9db2-dec53fa0cd49
 begin
@@ -218,6 +224,13 @@ a {
     text-decoration: none;
 }
 </style>"""
+
+# ╔═╡ cc61a630-21f6-4e7d-80ca-bf7ccf833922
+html"""
+<p style="font-size:18px;">Is there a correlation between reaction connectivity and extreme pathway
+reaction frequency?</br>
+</p>
+"""
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1210,9 +1223,8 @@ version = "0.9.1+5"
 
 # ╔═╡ Cell order:
 # ╟─6b1ad54f-61e4-490d-9032-7a557e8dc82f
-# ╟─7057c8e4-9e94-4a28-a885-07f5c96ebe39
+# ╠═7057c8e4-9e94-4a28-a885-07f5c96ebe39
 # ╟─87a183bc-3857-4189-8103-18c46ff3245d
-# ╠═0981f474-777e-4070-b47f-e790b6df6a44
 # ╠═5338451e-3c4b-4030-bbbb-42eaf4209a89
 # ╠═139f9873-1d00-486a-898b-c011a320f739
 # ╠═8c72cba0-fc6b-484f-9858-e11109a4d87d
@@ -1223,6 +1235,7 @@ version = "0.9.1+5"
 # ╠═7d5f56c3-0c0d-4b84-8ac7-7dd8472a5468
 # ╠═73449bab-5eb2-49f7-bba7-da517a967a92
 # ╠═47eb03ed-f593-401f-b634-98a01bc3099f
+# ╠═0ae0a6d7-a486-4914-bc9f-634824fcadc6
 # ╠═32c8c55e-dee9-4914-bdb1-3b94b6acf2fc
 # ╟─b473b17e-3bf5-4b6c-af24-fe57b5a7e7e9
 # ╠═999ae1fd-5341-4f66-9db2-dec53fa0cd49
@@ -1231,5 +1244,6 @@ version = "0.9.1+5"
 # ╠═67f5db98-88d0-11ec-27ac-b57538a166f4
 # ╠═267865de-1b5c-4579-861b-c6c46beb4739
 # ╟─ab2bcfd5-3ba7-4388-8a3c-2cb95fba989a
+# ╠═cc61a630-21f6-4e7d-80ca-bf7ccf833922
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
