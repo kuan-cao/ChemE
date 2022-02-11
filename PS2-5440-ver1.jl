@@ -20,13 +20,16 @@ md"""
 #### Build the stoichiometric array
 """
 
-# ╔═╡ 5b5bb7a9-ddb3-4297-8447-5e45b7deec5c
+# ╔═╡ 0981f474-777e-4070-b47f-e790b6df6a44
 
 
 # ╔═╡ 6970dab5-16bd-4898-b88d-723cb1b3d89e
 md"""
 #### Convex analysis: compute the extreme pathways
 """
+
+# ╔═╡ 32c8c55e-dee9-4914-bdb1-3b94b6acf2fc
+
 
 # ╔═╡ b473b17e-3bf5-4b6c-af24-fe57b5a7e7e9
 md"""
@@ -75,9 +78,11 @@ end
 
 # ╔═╡ 5338451e-3c4b-4030-bbbb-42eaf4209a89
 begin
+	reaction_array = 0
 	reaction_array = Array{String,1}()
-	push!(reaction_array,"v₁,3*ATP + 3*Citrulline + 3*Aspartate, 3*AMP + 3*Diphosphate + 3*Succinate,false")
-	push!(reaction_array,"v₂,3*Succinate, 3*Fumarate + 3*Arginine,false")
+	
+	push!(reaction_array,"v₁,ATP + Citrulline + Aspartate, AMP + Diphosphate + Arginosuccinate,false")
+	push!(reaction_array,"v₂,Arginosuccinate, Fumarate + Arginine,false")
 	push!(reaction_array,"v₃,Arginine + water, Ornithine + Urea,false")
 	push!(reaction_array,"v₄,CarbamoylPhosphate + Ornithine, Orthophosphate + Citrulline,false")
 	push!(reaction_array,"v₅,2*Arginine+4*Oxygen+3*NADPH + 3*Hplus, 2*NitricOxide + 2*Citrulline + 3*NADPplus + 4*water,true")
@@ -85,40 +90,25 @@ begin
 	push!(reaction_array,"b₁,∅,CarbamoylPhosphate,false")
 	push!(reaction_array,"b₂,∅,Aspartate,false")
 	push!(reaction_array,"b₃,Fumarate,∅,false")
-	push!(reaction_array,"v₄,Urea,∅,false")
+	push!(reaction_array,"b₄,Urea,∅,false")
 	
-	# push!(reaction_array,"vⱼ,J,∅,true")
-	
-	# push!(reaction_array,"bATP,ATP,∅,true")
-	# push!(reaction_array,"bAMP,AMP,∅,true")
-	# push!(reaction_array,"bDiphosphate,Diphosphate,∅,true")
-	# push!(reaction_array,"bNADPH,NADPH,∅,true")
-	# push!(reaction_array,"bNADPplus,NADPplus,∅,true")
-	# push!(reaction_array,"bwater,water,∅,true")
-	# push!(reaction_array,"boxygen,oxygen,∅,true")
-	# push!(reaction_array,"bNitricOxide,NitricOxide,∅,true")
-	# push!(reaction_array,"bOrthophosphate,Orthophosphate,∅,true")
-
-	# push!(reaction_array,"bCitrulline,Citrulline,∅,true")
-	# push!(reaction_array,"bSuccinate,Succinate,∅,true")
-	# push!(reaction_array,"bArginine,Arginine,∅,true")
-	# push!(reaction_array,"bOrnithine,Ornithine,∅,true")
-
 	push!(reaction_array,"bATP,∅,ATP,false")
 	push!(reaction_array,"bAMP,AMP,∅,false")
 	push!(reaction_array,"bDiphosphate,Diphosphate,∅,false")
-	push!(reaction_array,"bNADPH,∅,NADPH,false")
-	push!(reaction_array,"bNADPplus,NADPplus,∅,false")
-	push!(reaction_array,"bwater,water,∅,true")
-	push!(reaction_array,"boxygen,∅,oxygen,false")
-	push!(reaction_array,"bNitricOxide,NitricOxide,∅,false")
-	push!(reaction_array,"bHplus,∅,Hplus,false")
-	push!(reaction_array,"bOrthophosphate,Orthophosphate,∅,false")
 	
-	# push!(reaction_array,"bCitrulline,Citrulline,∅,true")
-	# push!(reaction_array,"bSuccinate,Succinate,∅,true")
-	push!(reaction_array,"bArginine,Arginine,∅,true")
-	push!(reaction_array,"bOrnithine,Ornithine,∅,true")
+	push!(reaction_array,"bNADPH,∅,NADPH,true")
+	push!(reaction_array,"bNADPplus,NADPplus,∅,true")
+	push!(reaction_array,"bwater,water,∅,true")
+	push!(reaction_array,"boxygen,∅,oxygen,true")
+	push!(reaction_array,"bNitricOxide,NitricOxide,∅,true")
+	push!(reaction_array,"bHplus,∅,Hplus,true")
+	
+	push!(reaction_array,"bOrthophosphate,Orthophosphate,∅,false")
+	push!(reaction_array,"bCitrulline,∅,Citrulline,false")
+	# push!(reaction_array,"bArginosuccinate,Arginosuccinate,∅,false")
+	
+	push!(reaction_array,"bArginine,Arginine,∅,false")
+	push!(reaction_array,"bOrnithine,Ornithine,∅,false")
 	
 	# compute the stoichiometric matrix -
 	(S, species_array, reaction_name_array) = lib.build_stoichiometric_matrix(reaction_array);
@@ -141,6 +131,24 @@ reaction_name_array
 # ╔═╡ 015f2c75-c79e-4f92-8be8-638377a75504
 S
 
+# ╔═╡ 5b5bb7a9-ddb3-4297-8447-5e45b7deec5c
+begin
+	#using DataFrames
+	#df = hcat([DataFrame(eachrow(S),eachcol(S)), :auto])
+	#for i in eachrow(S)
+	#using BrowseTables
+	#HTMLTable(S)
+	co = 0
+	# A = [[1,2,3] [1,1,1] [1,1,1]]
+	# A
+	for row in eachrow(S)
+		if row[21] != 0
+			co = co+1
+		end
+	end
+	co
+end
+
 # ╔═╡ 97b0763d-dcab-4afa-b660-52e18b3d523f
 begin
 	# compute the extreme pathways Tableu -
@@ -155,6 +163,27 @@ begin
 end
 
 # ╔═╡ 7d5f56c3-0c0d-4b84-8ac7-7dd8472a5468
+begin
+	P
+	begin
+		#using DataFrames
+		#df = hcat([DataFrame(eachrow(S),eachcol(S)), :auto])
+		#for i in eachrow(S)
+		#using BrowseTables
+		#HTMLTable(S)
+		countinggg = 0
+		# A = [[1,2,3] [1,1,1] [1,1,1]]
+		# A
+		for row in eachrow(P)
+			if row[21] != 0
+				countinggg = countinggg+1
+			end
+		end
+		countinggg
+	end
+end
+
+# ╔═╡ 73449bab-5eb2-49f7-bba7-da517a967a92
 P
 
 # ╔═╡ 47eb03ed-f593-401f-b634-98a01bc3099f
@@ -162,8 +191,9 @@ P
 
 # ╔═╡ 999ae1fd-5341-4f66-9db2-dec53fa0cd49
 begin
-	B = S |> binary_stoichiometric_matrix
+	B = S |> lib.binary_stoichiometric_matrix
 	MCA = B*transpose(B)
+	diag(MCA)
 end
 
 # ╔═╡ 4520fc6e-7305-487e-924d-af22406e6d45
@@ -1182,6 +1212,7 @@ version = "0.9.1+5"
 # ╟─6b1ad54f-61e4-490d-9032-7a557e8dc82f
 # ╟─7057c8e4-9e94-4a28-a885-07f5c96ebe39
 # ╟─87a183bc-3857-4189-8103-18c46ff3245d
+# ╠═0981f474-777e-4070-b47f-e790b6df6a44
 # ╠═5338451e-3c4b-4030-bbbb-42eaf4209a89
 # ╠═139f9873-1d00-486a-898b-c011a320f739
 # ╠═8c72cba0-fc6b-484f-9858-e11109a4d87d
@@ -1190,7 +1221,9 @@ version = "0.9.1+5"
 # ╟─6970dab5-16bd-4898-b88d-723cb1b3d89e
 # ╠═97b0763d-dcab-4afa-b660-52e18b3d523f
 # ╠═7d5f56c3-0c0d-4b84-8ac7-7dd8472a5468
+# ╠═73449bab-5eb2-49f7-bba7-da517a967a92
 # ╠═47eb03ed-f593-401f-b634-98a01bc3099f
+# ╠═32c8c55e-dee9-4914-bdb1-3b94b6acf2fc
 # ╟─b473b17e-3bf5-4b6c-af24-fe57b5a7e7e9
 # ╠═999ae1fd-5341-4f66-9db2-dec53fa0cd49
 # ╟─b7e5d1a6-57ed-4d09-a039-a4bd12386367
