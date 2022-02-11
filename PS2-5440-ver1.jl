@@ -28,11 +28,16 @@ md"""
 # ╔═╡ 32c8c55e-dee9-4914-bdb1-3b94b6acf2fc
 html"""
 <p style="font-size:18px;">How many extreme pathways (rows of P) did you get, and how many produced Urea?</br>
+We obtained a total of 4 extreme pathways and only 2 of them produced Urea.
+</p>
+"""
 
+# ╔═╡ 951f1f2a-88de-4b31-b7dd-8a6bef89c95c
+html"""
+<p style="font-size:18px;">
+Compute the reaction frequency (fraction of extreme pathways using a particular reaction) for each reaction (cols of P).
 </br>
 
-Compute the reaction frequency (fraction of extreme pathways using a particular reaction) for each reaction (cols of P).</br>
-</p>
 """
 
 # ╔═╡ b473b17e-3bf5-4b6c-af24-fe57b5a7e7e9
@@ -82,7 +87,7 @@ end
 
 # ╔═╡ 5338451e-3c4b-4030-bbbb-42eaf4209a89
 begin
-	reaction_array = 0
+
 	reaction_array = Array{String,1}()
 	
 	push!(reaction_array,"v₁,ATP+Citrulline+Aspartate,AMP+Diphosphate+Arginosuccinate,false")
@@ -181,7 +186,10 @@ begin
 end
 
 # ╔═╡ 73449bab-5eb2-49f7-bba7-da517a967a92
-P
+begin
+	P
+	typeof(P[3,1])
+end
 
 # ╔═╡ 47eb03ed-f593-401f-b634-98a01bc3099f
 𝒩
@@ -193,6 +201,24 @@ begin
 		numb = numb + 𝒩[i]
 	end
 	numb
+end
+
+# ╔═╡ f7bedc97-d983-4043-b4f1-ac000dd9868e
+begin
+	rxnfreq = Array{Any,1}
+	for col in eachcol(P)
+		x = 0
+		col
+		typeof(col)
+		for i in col
+			i
+			typeof(i)
+			if col[i] != Float64(0)
+				x = x + 1
+			end
+		end
+		push!(rxnfreq,x/4)
+	end
 end
 
 # ╔═╡ 999ae1fd-5341-4f66-9db2-dec53fa0cd49
@@ -1237,6 +1263,8 @@ version = "0.9.1+5"
 # ╠═47eb03ed-f593-401f-b634-98a01bc3099f
 # ╠═0ae0a6d7-a486-4914-bc9f-634824fcadc6
 # ╠═32c8c55e-dee9-4914-bdb1-3b94b6acf2fc
+# ╠═f7bedc97-d983-4043-b4f1-ac000dd9868e
+# ╠═951f1f2a-88de-4b31-b7dd-8a6bef89c95c
 # ╟─b473b17e-3bf5-4b6c-af24-fe57b5a7e7e9
 # ╠═999ae1fd-5341-4f66-9db2-dec53fa0cd49
 # ╟─b7e5d1a6-57ed-4d09-a039-a4bd12386367
