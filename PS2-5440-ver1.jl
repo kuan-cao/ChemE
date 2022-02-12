@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.17.7
+# v0.18.0
 
 using Markdown
 using InteractiveUtils
@@ -48,6 +48,18 @@ md"""
 # ╔═╡ b7e5d1a6-57ed-4d09-a039-a4bd12386367
 md"""
 #### Reaction connectivity array (RCA)
+"""
+
+# ╔═╡ cc61a630-21f6-4e7d-80ca-bf7ccf833922
+html"""
+<p style="font-size:18px;">Is there a correlation between reaction connectivity and extreme pathway
+reaction frequency?</br>
+</p>
+"""
+
+# ╔═╡ 65071bea-4866-4674-80a9-71ab5b3bcdae
+md"""
+#### Libraries Used
 """
 
 # ╔═╡ 267865de-1b5c-4579-861b-c6c46beb4739
@@ -114,7 +126,6 @@ begin
 	
 	push!(reaction_array,"bOrthophosphate,Orthophosphate,∅,false")
 	push!(reaction_array,"bCitrulline,∅,Citrulline,false")
-	# push!(reaction_array,"bArginosuccinate,Arginosuccinate,∅,false")
 	
 	push!(reaction_array,"bArginine,Arginine,∅,false")
 	push!(reaction_array,"bOrnithine,Ornithine,∅,false")
@@ -126,9 +137,7 @@ begin
 	# nothing
 
 	(ℳ,ℛ) = size(S)
-	species_array
-	reaction_name_array
-	S
+
 end
 
 # ╔═╡ 139f9873-1d00-486a-898b-c011a320f739
@@ -140,24 +149,6 @@ reaction_name_array
 # ╔═╡ 015f2c75-c79e-4f92-8be8-638377a75504
 S
 
-# ╔═╡ 5b5bb7a9-ddb3-4297-8447-5e45b7deec5c
-begin
-	#using DataFrames
-	#df = hcat([DataFrame(eachrow(S),eachcol(S)), :auto])
-	#for i in eachrow(S)
-	#using BrowseTables
-	#HTMLTable(S)
-	co = 0
-	# A = [[1,2,3] [1,1,1] [1,1,1]]
-	# A
-	for row in eachrow(S)
-		if row[21] != 0
-			co = co+1
-		end
-	end
-	co
-end
-
 # ╔═╡ 97b0763d-dcab-4afa-b660-52e18b3d523f
 begin
 	# compute the extreme pathways Tableu -
@@ -167,29 +158,10 @@ begin
 	P = PM[:,1:ℛ]
 	𝒩 = PM[:,(ℛ+1):end]
 
-	# show -
-	# nothing
-end
-
-# ╔═╡ 7d5f56c3-0c0d-4b84-8ac7-7dd8472a5468
-begin
-	P
-	begin
-		countinggg = 0
-		for row in eachrow(P)
-			if row[21] != 0
-				countinggg = countinggg+1
-			end
-		end
-		countinggg
-	end
 end
 
 # ╔═╡ 73449bab-5eb2-49f7-bba7-da517a967a92
-begin
 	P
-	typeof(P[3,1])
-end
 
 # ╔═╡ 47eb03ed-f593-401f-b634-98a01bc3099f
 𝒩
@@ -205,20 +177,18 @@ end
 
 # ╔═╡ f7bedc97-d983-4043-b4f1-ac000dd9868e
 begin
-	rxnfreq = Array{Any,1}
+	rxnfreq = Array{Float64,1}()
 	for col in eachcol(P)
 		x = 0
-		col
-		typeof(col)
-		for i in col
-			i
-			typeof(i)
-			if col[i] != Float64(0)
+		for i in 1:length(col)
+			print
+			if col[i] != 0
 				x = x + 1
 			end
 		end
-		push!(rxnfreq,x/4)
+		push!(rxnfreq, x/4)
 	end
+	rxnfreq
 end
 
 # ╔═╡ 999ae1fd-5341-4f66-9db2-dec53fa0cd49
@@ -251,13 +221,6 @@ a {
 }
 </style>"""
 
-# ╔═╡ cc61a630-21f6-4e7d-80ca-bf7ccf833922
-html"""
-<p style="font-size:18px;">Is there a correlation between reaction connectivity and extreme pathway
-reaction frequency?</br>
-</p>
-"""
-
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -276,7 +239,7 @@ PrettyTables = "~1.3.1"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.7.1"
+julia_version = "1.7.2"
 manifest_format = "2.0"
 
 [[deps.AbstractPlutoDingetjes]]
@@ -1255,10 +1218,8 @@ version = "0.9.1+5"
 # ╠═139f9873-1d00-486a-898b-c011a320f739
 # ╠═8c72cba0-fc6b-484f-9858-e11109a4d87d
 # ╠═015f2c75-c79e-4f92-8be8-638377a75504
-# ╠═5b5bb7a9-ddb3-4297-8447-5e45b7deec5c
 # ╟─6970dab5-16bd-4898-b88d-723cb1b3d89e
 # ╠═97b0763d-dcab-4afa-b660-52e18b3d523f
-# ╠═7d5f56c3-0c0d-4b84-8ac7-7dd8472a5468
 # ╠═73449bab-5eb2-49f7-bba7-da517a967a92
 # ╠═47eb03ed-f593-401f-b634-98a01bc3099f
 # ╠═0ae0a6d7-a486-4914-bc9f-634824fcadc6
@@ -1267,11 +1228,12 @@ version = "0.9.1+5"
 # ╠═951f1f2a-88de-4b31-b7dd-8a6bef89c95c
 # ╟─b473b17e-3bf5-4b6c-af24-fe57b5a7e7e9
 # ╠═999ae1fd-5341-4f66-9db2-dec53fa0cd49
-# ╟─b7e5d1a6-57ed-4d09-a039-a4bd12386367
+# ╠═b7e5d1a6-57ed-4d09-a039-a4bd12386367
 # ╠═4520fc6e-7305-487e-924d-af22406e6d45
+# ╠═cc61a630-21f6-4e7d-80ca-bf7ccf833922
+# ╟─65071bea-4866-4674-80a9-71ab5b3bcdae
 # ╠═67f5db98-88d0-11ec-27ac-b57538a166f4
 # ╠═267865de-1b5c-4579-861b-c6c46beb4739
 # ╟─ab2bcfd5-3ba7-4388-8a3c-2cb95fba989a
-# ╠═cc61a630-21f6-4e7d-80ca-bf7ccf833922
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
