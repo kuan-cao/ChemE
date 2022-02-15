@@ -11,8 +11,20 @@ md"""
 
 # ╔═╡ 7057c8e4-9e94-4a28-a885-07f5c96ebe39
 html"""
-<p style="font-size:20px;">Kuan Cao, Emily Chou, Sarah Huang</br>
+<p style="font-size:20px;">Kuan Cao (kc827), Emily Chou (eac26), Sarah Huang (slh268)</br>
 Smith School of Chemical and Biomolecular Engineering, Cornell University, Ithaca NY 14850</p>
+"""
+
+# ╔═╡ baffa335-7e6e-4ae3-b45f-ae1402e1735d
+html"""
+<p style="font-size:18px;">Author Contributions</br></br>
+
+Sarah contributed to debugging and working together with the team to model the parameters.</br>
+Kuan contributed to creating the initial draft of the code and debugging with the team.</br>
+Emily contributed to debugging the code and formatting the resulting arrays using prettytables.</br>
+We all collaborated together to develop all the solutions.
+
+</p>
 """
 
 # ╔═╡ 87a183bc-3857-4189-8103-18c46ff3245d
@@ -20,15 +32,25 @@ md"""
 #### Build the stoichiometric array
 """
 
+# ╔═╡ 677d5bfb-051e-4204-b009-94f0f617eddf
+html"""
+<p style="font-size:18px;">The stoichimetric matrix is represented by S, and is shown below.
+</p>"""
+
 # ╔═╡ 6970dab5-16bd-4898-b88d-723cb1b3d89e
 md"""
 #### Convex analysis: compute the extreme pathways
 """
 
+# ╔═╡ 3a4afa54-a9f0-43d6-86e7-acee98d7d77e
+html"""
+<p style="font-size:18px;">The extreme pathways are represented by P, and is shown below.
+</p>"""
+
 # ╔═╡ 32c8c55e-dee9-4914-bdb1-3b94b6acf2fc
 html"""
-<p style="font-size:18px;">How many extreme pathways (rows of P) did you get, and how many produced Urea?</br>
-We obtained a total of 4 extreme pathways and only 2 of them produced Urea.
+<p style="font-size:18px;">How many extreme pathways (rows of P) did you get, and how many produced Urea?</br></br>
+We obtained a total of 4 extreme pathways and only 1 of them produced Urea. Urea is listed as index 17 in the species_array, and we only found one nonzero entry for the 17th column of P. Based on the KEGG diagram, this makes biological sense.
 </p>
 """
 
@@ -53,7 +75,8 @@ md"""
 # ╔═╡ cc61a630-21f6-4e7d-80ca-bf7ccf833922
 html"""
 <p style="font-size:18px;">Is there a correlation between reaction connectivity and extreme pathway
-reaction frequency?</br>
+reaction frequency?</br></br>
+We did not see any clear correlation between reaction connectivity and extreme pathway reaction frequency. Specifically, for the reactions with reaction connectivity value of 1, there were varying values of reaction frequency. We hypothesize that this is the case because the extreme pathways represent the possible steady state flux distributions, which doesn't necessarily depend on how many metabolites are used in the reactions. 
 </p>
 """
 
@@ -101,41 +124,37 @@ end
 begin
 
 	reaction_array = Array{String,1}()
-	
+
+	# urea cycle reactions
 	push!(reaction_array,"v₁,ATP+Citrulline+Aspartate,AMP+Diphosphate+Arginosuccinate,false")
 	push!(reaction_array,"v₂,Arginosuccinate,Fumarate+Arginine,false")
 	push!(reaction_array,"v₃,Arginine+water, Ornithine+Urea,false")
 	push!(reaction_array,"v₄,CarbamoylPhosphate+Ornithine, Orthophosphate+Citrulline,false")
 	push!(reaction_array,"v₅,2*Arginine+4*Oxygen+3*NADPH+3*Hplus, 2*NitricOxide+2*Citrulline+3*NADPplus+4*water,true")
 
+	# exchange reactions
 	push!(reaction_array,"b₁,∅,CarbamoylPhosphate,false")
 	push!(reaction_array,"b₂,∅,Aspartate,false")
 	push!(reaction_array,"b₃,Fumarate,∅,false")
-	push!(reaction_array,"b₄,Urea,∅,false")
-	
+	push!(reaction_array,"b₄,Urea,∅,false")	
 	push!(reaction_array,"bATP,∅,ATP,false")
 	push!(reaction_array,"bAMP,AMP,∅,false")
-	push!(reaction_array,"bDiphosphate,Diphosphate,∅,false")
-	
+	push!(reaction_array,"bDiphosphate,Diphosphate,∅,false")	
 	push!(reaction_array,"bNADPH,∅,NADPH,true")
 	push!(reaction_array,"bNADPplus,NADPplus,∅,true")
 	push!(reaction_array,"bwater,water,∅,true")
 	push!(reaction_array,"bOxygen,∅,Oxygen,true")
 	push!(reaction_array,"bNitricOxide,NitricOxide,∅,true")
-	push!(reaction_array,"bHplus,∅,Hplus,true")
-	
+	push!(reaction_array,"bHplus,∅,Hplus,true")	
 	push!(reaction_array,"bOrthophosphate,Orthophosphate,∅,false")
-	push!(reaction_array,"bCitrulline,∅,Citrulline,false")
-	
+	push!(reaction_array,"bCitrulline,∅,Citrulline,false")	
 	push!(reaction_array,"bArginine,Arginine,∅,false")
 	push!(reaction_array,"bOrnithine,Ornithine,∅,false")
 	
-	# compute the stoichiometric matrix -
+	# compute the stoichiometric matrix
 	(S, species_array, reaction_name_array) = lib.build_stoichiometric_matrix(reaction_array);
 
-	# # show -
-	# nothing
-
+	# dimensions of stoichimetrix matrix
 	(ℳ,ℛ) = size(S)
 
 end
@@ -151,22 +170,24 @@ S
 
 # ╔═╡ 97b0763d-dcab-4afa-b660-52e18b3d523f
 begin
-	# compute the extreme pathways Tableu -
+	
+	# compute the extreme pathways Tableu
 	PM = lib.expa(S)
 	
-	# P constaints the extreme pathways (rows) and 𝒩 is the "balanced" array (should be all zeros) -
+	# P contains the extreme pathways and 𝒩 is the balanced array
 	P = PM[:,1:ℛ]
 	𝒩 = PM[:,(ℛ+1):end]
 
 end
 
 # ╔═╡ 73449bab-5eb2-49f7-bba7-da517a967a92
-	P
+P
 
 # ╔═╡ 47eb03ed-f593-401f-b634-98a01bc3099f
 𝒩
 
 # ╔═╡ 0ae0a6d7-a486-4914-bc9f-634824fcadc6
+# checks that 𝒩 only contains zeros
 begin
 	numb = 0
 	for i in eachindex(𝒩)
@@ -177,6 +198,8 @@ end
 
 # ╔═╡ f7bedc97-d983-4043-b4f1-ac000dd9868e
 begin
+	
+	# calculate reaction frequency
 	rxnfreq = Array{Float64,1}()
 	for col in eachcol(P)
 		x = 0
@@ -188,21 +211,81 @@ begin
 		end
 		push!(rxnfreq, x/4)
 	end
-	rxnfreq
+	
+end
+
+# ╔═╡ 28be9368-d5f8-4eeb-8de4-afb6a03dfd68
+with_terminal() do
+	
+# set up table array
+	reaction_rxnfreq_array = Array{Any,2}(undef,length(rxnfreq),2)
+	for reaction_index in 1:length(rxnfreq)
+		reaction_rxnfreq_array[reaction_index,1] = reaction_name_array[reaction_index]
+		reaction_rxnfreq_array[reaction_index,2] = rxnfreq[reaction_index]
+	end
+
+	# make table
+	path_table_header_row = (["Reaction Name","Reaction Frequency"]);
+	pretty_table(reaction_rxnfreq_array; header=path_table_header_row)
+
 end
 
 # ╔═╡ 999ae1fd-5341-4f66-9db2-dec53fa0cd49
 begin
 	B = S |> lib.binary_stoichiometric_matrix
 	MCA = B*transpose(B)
-	diag(MCA)
+	diagMCA = diag(MCA)
+end
+
+# ╔═╡ 3e483ef8-e3e6-4a7f-a305-7d343ca88aa3
+with_terminal() do
+	# set up table array
+	metabolite_array = Array{Any,2}(undef,length(species_array),2)
+	for metabolite_index in 1:length(species_array)
+		metabolite_array[metabolite_index,1] = species_array[metabolite_index]
+		metabolite_array[metabolite_index,2] = diagMCA[metabolite_index]
+	end
+
+	# make table
+	path_table_header_row3 = (["Metabolite Name","Metabolite Connectivity"]);
+	pretty_table(metabolite_array; header=path_table_header_row3)
 end
 
 # ╔═╡ 4520fc6e-7305-487e-924d-af22406e6d45
 begin
+	
 	RCA = transpose(B)*B
-	diag(RCA)
-	# reaction_name_array[11]
+	diagRCA = diag(RCA)
+	
+end
+
+# ╔═╡ 47b10b95-5c95-45a0-8914-a4f7837b607e
+with_terminal() do
+	# set up table array
+	reaction_array3 = Array{Any,2}(undef,length(reaction_name_array),2)
+	for reaction_index3 in 1:length(reaction_name_array)
+		reaction_array3[reaction_index3,1] = reaction_name_array[reaction_index3]
+		reaction_array3[reaction_index3,2] = diagRCA[reaction_index3]
+	end
+
+	# make table
+	path_table_header_row4 = (["Reaction Name","Reaction Connectivity"]);
+	pretty_table(reaction_array3; header=path_table_header_row4)
+end
+
+# ╔═╡ 32d9d8dd-b7f0-4257-af81-7ae604d19bf5
+with_terminal() do
+	# set up table array
+	reaction_array2 = Array{Any,2}(undef,length(reaction_name_array),3)
+	for reaction_index2 in 1:length(reaction_name_array)
+		reaction_array2[reaction_index2,1] = reaction_name_array[reaction_index2]
+		reaction_array2[reaction_index2,2] = diagRCA[reaction_index2]
+		reaction_array2[reaction_index2,3] = rxnfreq[reaction_index2]
+	end
+
+	# make table
+	path_table_header_row2 = (["Reaction Name","Reaction Connectivity","Reaction Frequency"]);
+	pretty_table(reaction_array2; header=path_table_header_row2)
 end
 
 # ╔═╡ ab2bcfd5-3ba7-4388-8a3c-2cb95fba989a
@@ -239,7 +322,7 @@ PrettyTables = "~1.3.1"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.7.2"
+julia_version = "1.7.1"
 manifest_format = "2.0"
 
 [[deps.AbstractPlutoDingetjes]]
@@ -1213,24 +1296,31 @@ version = "0.9.1+5"
 # ╔═╡ Cell order:
 # ╟─6b1ad54f-61e4-490d-9032-7a557e8dc82f
 # ╠═7057c8e4-9e94-4a28-a885-07f5c96ebe39
+# ╠═baffa335-7e6e-4ae3-b45f-ae1402e1735d
 # ╟─87a183bc-3857-4189-8103-18c46ff3245d
 # ╠═5338451e-3c4b-4030-bbbb-42eaf4209a89
 # ╠═139f9873-1d00-486a-898b-c011a320f739
 # ╠═8c72cba0-fc6b-484f-9858-e11109a4d87d
+# ╟─677d5bfb-051e-4204-b009-94f0f617eddf
 # ╠═015f2c75-c79e-4f92-8be8-638377a75504
 # ╟─6970dab5-16bd-4898-b88d-723cb1b3d89e
 # ╠═97b0763d-dcab-4afa-b660-52e18b3d523f
+# ╟─3a4afa54-a9f0-43d6-86e7-acee98d7d77e
 # ╠═73449bab-5eb2-49f7-bba7-da517a967a92
 # ╠═47eb03ed-f593-401f-b634-98a01bc3099f
 # ╠═0ae0a6d7-a486-4914-bc9f-634824fcadc6
-# ╠═32c8c55e-dee9-4914-bdb1-3b94b6acf2fc
+# ╟─32c8c55e-dee9-4914-bdb1-3b94b6acf2fc
+# ╟─951f1f2a-88de-4b31-b7dd-8a6bef89c95c
 # ╠═f7bedc97-d983-4043-b4f1-ac000dd9868e
-# ╠═951f1f2a-88de-4b31-b7dd-8a6bef89c95c
+# ╟─28be9368-d5f8-4eeb-8de4-afb6a03dfd68
 # ╟─b473b17e-3bf5-4b6c-af24-fe57b5a7e7e9
 # ╠═999ae1fd-5341-4f66-9db2-dec53fa0cd49
-# ╠═b7e5d1a6-57ed-4d09-a039-a4bd12386367
+# ╟─3e483ef8-e3e6-4a7f-a305-7d343ca88aa3
+# ╟─b7e5d1a6-57ed-4d09-a039-a4bd12386367
 # ╠═4520fc6e-7305-487e-924d-af22406e6d45
-# ╠═cc61a630-21f6-4e7d-80ca-bf7ccf833922
+# ╟─47b10b95-5c95-45a0-8914-a4f7837b607e
+# ╟─cc61a630-21f6-4e7d-80ca-bf7ccf833922
+# ╟─32d9d8dd-b7f0-4257-af81-7ae604d19bf5
 # ╟─65071bea-4866-4674-80a9-71ab5b3bcdae
 # ╠═67f5db98-88d0-11ec-27ac-b57538a166f4
 # ╠═267865de-1b5c-4579-861b-c6c46beb4739
